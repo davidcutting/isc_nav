@@ -20,9 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "isc_snav/waypoint_server_node.hpp"
+#include "isc_nav/waypoint_server_node.hpp"
 
-namespace isc_snav
+namespace isc_nav
 {
 
 WaypointServer::WaypointServer(rclcpp::NodeOptions options)

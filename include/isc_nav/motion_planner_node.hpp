@@ -24,7 +24,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace isc_snav
+namespace isc_nav
 {
 class MotionPlanner : public rclcpp::Node
 {
@@ -34,4 +34,4 @@ public:
 private:
     // here
 };
-}  // namespace isc_snav
+}  // namespace isc_nav

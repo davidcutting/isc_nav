@@ -21,9 +21,9 @@
 // SOFTWARE.
 
 #include "rclcpp/rclcpp.hpp"
-#include "isc_snav/motion_planner_node.hpp"
+#include "isc_nav/motion_planner_node.hpp"
 
-namespace isc_snav
+namespace isc_nav
 {
 
 MotionPlanner::MotionPlanner(rclcpp::NodeOptions options)
@@ -34,4 +34,4 @@ MotionPlanner::MotionPlanner(rclcpp::NodeOptions options)
 
 // https://github.com/iscumd/path_tracking/blob/master/src/pure_pursuit_node.cpp
 
-}  // namespace isc_snav
+}  // namespace isc_nav

@@ -25,9 +25,6 @@
 
 #include <tuple>
 #include <vector>
-#include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/path.hpp"
-#include <geometry_msgs/msg/twist.hpp>
 #include "utility/point.hpp"
 
 typedef std::vector<Point3D> Path;
@@ -36,11 +33,11 @@ typedef std::pair<Point2D, Point2D> Segment2D;
 
 namespace PurePursuit
 {
-class PurePursuit : public rclcpp::Node
+class PurePursuit
 {
 public:
-    PurePursuit(rclcpp::NodeOptions options);
-
+    PurePursuit(const Path& robot_path, const double& lookahead_distance);
+    
     /**
     * @brief Find the target state (point and velocity) of the robot
     * @param state a Point3D where x and y are the position of the bot and z is heading
@@ -62,14 +59,6 @@ public:
     void reset_lookahead_distance( const double& lookahead_distance );
 
 protected:
-
-    /**
-    * @brief Callback that will convert ros path to Point
-    * @param the path message 
-    * @return ??
-    */
-    void path_callback(const nav_msgs::msg::Path::SharedPtr path);
-    
     std::pair<Point2D, double> project_to_line_segment( Point2D p, Segment2D seg );
     
     // function to scale values in one range to values in another range -  proportional
@@ -115,10 +104,8 @@ protected:
 
     std::pair<Point2D, double> get_current_segment_location_on_path( const Point2D& state );
 
-    double m_lookahead_distance;
     Path m_robot_path;
-    ulong m_current_segment;
-    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_subscription;
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr speed;
+    double m_lookahead_distance;
+    uint32_t m_current_segment;
 };
 } // namespace pure pursuit

@@ -20,9 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "isc_snav/path_planner_node.hpp"
+#include "isc_nav/path_planner_node.hpp"
 
-namespace isc_snav
+namespace isc_nav
 {
 
 PathPlanner::PathPlanner(rclcpp::NodeOptions options)
@@ -63,15 +63,15 @@ void PathPlanner::goal_callback(const geometry_msgs::msg::Pose::SharedPtr msg)
     last_goal_state_ = msg;
 }
 
-}  // namespace isc_snav
+}  // namespace isc_nav
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
-  auto lp_node = std::make_shared<isc_snav::PathPlanner>(options);
-  exec.add_node(lp_node);
+  auto path_node = std::make_shared<isc_nav::PathPlanner>(options);
+  exec.add_node(path_node);
   exec.spin();
   rclcpp::shutdown();
   return 0;

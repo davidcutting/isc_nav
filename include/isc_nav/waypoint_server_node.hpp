@@ -23,32 +23,15 @@
 #pragma once
 
 #include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/pose.hpp"
-#include "nav_msgs/msg/occupancy_grid.hpp"
 
-#include <memory>
-#include <functional>
-#include <nav_msgs/msg/detail/path__struct.hpp>
-
-namespace isc_snav
+namespace isc_nav
 {
-class PathPlanner : public rclcpp::Node
+class WaypointServer : public rclcpp::Node
 {
 public:
-    explicit PathPlanner(rclcpp::NodeOptions options);
+    explicit WaypointServer(rclcpp::NodeOptions options);
 
 private:
-    nav_msgs::msg::OccupancyGrid::SharedPtr last_map_state_;
-    geometry_msgs::msg::Pose::SharedPtr last_goal_state_;
-    geometry_msgs::msg::Pose::SharedPtr last_pos_state_;
-
-    void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-    void pos_callback(const geometry_msgs::msg::Pose::SharedPtr msg);
-    void goal_callback(const geometry_msgs::msg::Pose::SharedPtr msg);
-    
-    rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_subscription_;
-    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr pos_subscription_;
-    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr goal_subscription_;
-    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_publisher_;
+    // putting "waypoint_publisher" and our version of the nav2 waypoint server here?
 };
-}  // namespace isc_snav
+}  // namespace isc_nav
