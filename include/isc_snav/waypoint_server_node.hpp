@@ -20,8 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef ISC_SNAV__WAYPOINT_SERVER_NODE_HPP_
-#define ISC_SNAV__WAYPOINT_SERVER_NODE_HPP_
+#pragma once
+
+#include "rclcpp/rclcpp.hpp"
 
 namespace isc_snav
 {
@@ -34,5 +35,3 @@ private:
     // putting "waypoint_publisher" and our version of the nav2 waypoint server here?
 };
 }  // namespace isc_snav
-
-#endif  // ISC_SNAV__WAYPOINT_SERVER_NODE_HPP_

@@ -20,8 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef ISC_SNAV__PATH_PLANNER_NODE_HPP_
-#define ISC_SNAV__PATH_PLANNER_NODE_HPP_
+#pragma once
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose.hpp"
@@ -29,6 +28,7 @@
 
 #include <memory>
 #include <functional>
+#include <nav_msgs/msg/detail/path__struct.hpp>
 
 namespace isc_snav
 {
@@ -38,7 +38,7 @@ public:
     explicit PathPlanner(rclcpp::NodeOptions options);
 
 private:
-    geometry_msgs::msg::OccupancyGrid::SharedPtr last_map_state_;
+    nav_msgs::msg::OccupancyGrid::SharedPtr last_map_state_;
     geometry_msgs::msg::Pose::SharedPtr last_goal_state_;
     geometry_msgs::msg::Pose::SharedPtr last_pos_state_;
 
@@ -52,5 +52,3 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_publisher_;
 };
 }  // namespace isc_snav
-
-#endif  // ISC_SNAV__PATH_PLANNER_NODE_HPP_

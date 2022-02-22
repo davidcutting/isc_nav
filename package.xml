@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>isc_snav</name>
+  <name>isc_nav</name>
   <version>0.0.0</version>
   <description>A minimal and simple-as-possible implementation of a navigation system for ground based mobile robots</description>
   <maintainer email="isc-robotics@umich.edu">Intelligent Systems Club</maintainer>

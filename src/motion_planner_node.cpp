@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "rclcpp/rclcpp.hpp"
 #include "isc_snav/motion_planner_node.hpp"
 
 namespace isc_snav
