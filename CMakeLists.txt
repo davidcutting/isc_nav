@@ -21,46 +21,39 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 
-# motion planner
-add_executable(motion_planner_node src/motion_planner_node.cpp)
-
-ament_target_dependencies(
-  motion_planner_node
-  geometry_msgs
-  rclcpp
-  nav_msgs
-)
-
 # path planner
-add_executable(path_planner_node src/path_planner_node.cpp)
+#add_executable(path_planner_node src/path_planner_node.cpp)
+#ament_target_dependencies(
+#  path_planner_node
+#  geometry_msgs
+#  rclcpp
+#  nav_msgs
+#)
+#target_include_directories(path_planner_node  PUBLIC
+ # $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#  $<INSTALL_INTERFACE:include>)
+   
+add_executable(pure_pursuit
+  src/pure_pursuit.cpp
+  src/pure_pursuit_node.cpp
+  )
 
 ament_target_dependencies(
-  path_planner_node
+  pure_pursuit
   geometry_msgs
   rclcpp
   nav_msgs
 )
 
-# waypoint server
-add_executable(waypoint_server_node src/waypoint_server_node.cpp)
-
-ament_target_dependencies(
-  waypoint_server_node
-  geometry_msgs
-  rclcpp
-  nav_msgs
-)
-
-
-target_include_directories(isc_snav PUBLIC
+  target_include_directories(pure_pursuit  PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-      
-install(TARGETS isc_snav 
+       
+install(TARGETS pure_pursuit 
   DESTINATION lib/${PROJECT_NAME})
   
 install(
-  DIRECTORY launch config
+  DIRECTORY config
   DESTINATION share/${PROJECT_NAME}/
 )
 
