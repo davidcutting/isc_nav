@@ -23,6 +23,7 @@
 #pragma once
 
 #include "rclcpp/rclcpp.hpp"
+
 namespace isc_snav
 {
 class WaypointServer : public rclcpp::Node
