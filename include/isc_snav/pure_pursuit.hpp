@@ -1,7 +1,7 @@
 // MIT License
 //
 // Copyright (c) Intelligent Systems Club
-// Copyright (c) Aaron Cofield, JessRose Narsinghia, Andrew R. Davis
+// Copyright (c) Avery Girven
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,61 +26,26 @@
 
 #include <tuple>
 #include <vector>
+#include "rclcpp/rclcpp.hpp"
+#include "nav_msgs/msg/path.hpp"
+#include <geometry_msgs/msg/twist.hpp>
+#include "utility/point.hpp"
 
 #define EPSILON 1e-3
-
-/**
- * @brief data structure to represent x and y coordinates for the robot
- */
-struct Point2D
-{
-    double x, y;
-    Point2D( const double& ix, const double& iy )
-        : x( ix )
-        , y( iy )
-    {
-    }
-    Point2D() {}
-};
-
-bool operator==( const Point2D& lhs, const Point2D& rhs )
-{
-    return ( lhs.x == rhs.x && lhs.y == rhs.y );
-}
-
-/**
- * @brief: data structure to present x, y, and z (velocity) of the robot
- */
-struct Point3D
-{
-    double x, y, z;
-    Point3D( const double& ix, const double& iy, const double& iz )
-        : x( ix )
-        , y( iy )
-        , z( iz )
-    {
-    }
-    Point3D() {}
-
-    Point2D to2D() { return Point2D( x, y ); }
-};
-
-bool operator==( const Point3D& lhs, const Point3D& rhs )
-{
-    return ( lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z );
-}
 
 typedef std::vector<Point3D> Path;
 typedef std::pair<Point3D, Point3D> Segment3D;
 typedef std::pair<Point2D, Point2D> Segment2D;
 
-class PurePursuit
+namespace PurePursuit
+{
+class PurePursuit : public rclcpp::Node
 {
 public:
-    PurePursuit(const Path& robot_path, const double& lookahead_distance);
+    PurePursuit(rclcpp::NodeOptions options);
 
     /**
-    * @brief Find the targer state (point and velocity) of the robot
+    * @brief Find the target state (point and velocity) of the robot
     * @param state a Point3D where x and y are the position of the bot and z is heading
     * @return return Point3D that is lookahead point, first double is heading to point,
     * second double is the heading error
@@ -100,6 +65,20 @@ public:
     void reset_lookahead_distance( const double& lookahead_distance );
 
 protected:
+
+    /**
+    * @brief Callback that will convert ros path to Point
+    * @param the path message 
+    * @return ??
+    */
+    void path_callback(const nav_msgs::msg::Path::SharedPtr path);
+    
+    std::pair<Point2D, double> project_to_line_segment( Point2D p, Segment2D seg );
+    
+    // function to scale values in one range to values in another range -  proportional
+    // scaling.. this is to find z value
+    double pscale( const double& x, const double& in_min, const double& in_max,
+							 const double& out_min, const double& out_max );
     /**
     * @brief Will get the coordinates and target velocity of the lookahead point
     * @param the current location of the robot
@@ -142,6 +121,8 @@ protected:
     double m_lookahead_distance;
     Path m_robot_path;
     ulong m_current_segment;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_subscription;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr speed;
 };
-
+} // namespace pure pursuit
 #endif  // ISC_SNAV__PURE_PURSUIT_HPP_
