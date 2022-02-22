@@ -44,7 +44,7 @@ PathPlanner::PathPlanner(rclcpp::NodeOptions options)
     );
 
     path_publisher_ = this->create_publisher<nav_msgs::msg::Path>(
-        "/navigation/path", 5) 
+        "/navigation/path", 5
     );
 }
 
@@ -70,7 +70,7 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
-  auto lp_node = std::make_shared<PathPlanner::PathPlanner>(options);
+  auto lp_node = std::make_shared<isc_snav::PathPlanner>(options);
   exec.add_node(lp_node);
   exec.spin();
   rclcpp::shutdown();

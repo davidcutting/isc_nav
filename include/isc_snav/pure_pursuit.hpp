@@ -21,8 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef ISC_SNAV__PURE_PURSUIT_HPP_
-#define ISC_SNAV__PURE_PURSUIT_HPP_
+#pragma once
 
 #include <tuple>
 #include <vector>
@@ -30,8 +29,6 @@
 #include "nav_msgs/msg/path.hpp"
 #include <geometry_msgs/msg/twist.hpp>
 #include "utility/point.hpp"
-
-#define EPSILON 1e-3
 
 typedef std::vector<Point3D> Path;
 typedef std::pair<Point3D, Point3D> Segment3D;
@@ -125,4 +122,3 @@ protected:
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr speed;
 };
 } // namespace pure pursuit
-#endif  // ISC_SNAV__PURE_PURSUIT_HPP_
