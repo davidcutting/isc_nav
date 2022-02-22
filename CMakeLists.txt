@@ -22,34 +22,34 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 
 # path planner
-#add_executable(path_planner_node src/path_planner_node.cpp)
-#ament_target_dependencies(
-#  path_planner_node
-#  geometry_msgs
-#  rclcpp
-#  nav_msgs
-#)
-#target_include_directories(path_planner_node  PUBLIC
- # $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#  $<INSTALL_INTERFACE:include>)
-   
+add_executable(path_planner_node src/path_planner_node.cpp)
+ament_target_dependencies(
+  path_planner_node
+  geometry_msgs
+  rclcpp
+  nav_msgs
+)
+target_include_directories(path_planner_node  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+# pure pursuit
 add_executable(pure_pursuit
   src/pure_pursuit.cpp
   src/pure_pursuit_node.cpp
-  )
-
+)
 ament_target_dependencies(
   pure_pursuit
   geometry_msgs
   rclcpp
   nav_msgs
 )
-
-  target_include_directories(pure_pursuit  PUBLIC
+target_include_directories(pure_pursuit  PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-       
-install(TARGETS pure_pursuit 
+
+
+install(TARGETS pure_pursuit path_planner_node
   DESTINATION lib/${PROJECT_NAME})
   
 #install( TODO add when we have configs
