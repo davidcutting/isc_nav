@@ -22,158 +22,203 @@
 
 // TODO a* go here
 
-
-//get ocuppancy grid, current location, goal location
+// get ocuppancy grid, current location, goal location
 
 #include <stdlib.h>
 #include <vector>
+#include <queue>
 using namespace std;
 
-
-
-struct pair{
+// coordinates on occupancy grid
+struct coordinate_pair
+{
     int x;
     int y;
 };
 
-struct node{
-    pair coordinates;
+// holds path that leads to latest coordinate position
+// along with g(n), h(n), and f(n)
+struct node
+{
     int g_n;
     int h_n;
-    int f_n; 
+    int f_n;
+    vector<coordinate_pair> path;
 
+    bool operator==(const node &a) const
+    {
+        return a.f_n == f_n;
+    }
+
+    bool operator<(const node &a) const
+    {
+        return f_n < a.f_n;
+    }
+
+    bool operator>(const node &a) const
+    {
+        return f_n > a.f_n;
+    }
+
+    bool operator!=(const node &a) const
+    {
+        return f_n != a.f_n;
+    }
+
+    bool operator<=(const node &a) const
+    {
+        return f_n <= a.f_n;
+    }
+
+    bool operator>=(const node &a) const
+    {
+        return f_n >= a.f_n;
+    }
 };
 
+// given goal location and current robot location
+coordinate_pair goal_location;
+coordinate_pair robot_location;
 
-pair goal_location;
-pair robot_location;
-
+// given occupancy grid
+// assumes that 1's indicate obstacles
 vector<vector<int>> occupancy_grid;
 
+// paths being explored
+priority_queue<node *> frontier;
 
-vector<node*> frontier;
+// finds the h(n) using the Manhattan Distance
+int findHn(coordinate_pair current_location, coordinate_pair goal_location)
+{
 
-vector<node*> closed_list;
-
-
-
-//finds the h(n) using the Manhattan Distance 
- int findHn(int *current_location, int *goal_location){
-
-    return abs(goal_location[0]-current_location[0]) + abs(goal_location[0]-current_location[0]);               
-
- };
-
-node* makeNewNode(int direction_shift, node* expanding_node){
-
-        node *expansion = new node;
-
-        expansion -> coordinates = expanding_node -> coordinates;
-        expansion -> g_n = expanding_node -> g_n;
-
-        //right shift
-        if(direction_shift == 0){
-            expansion -> coordinates.x+1;
-            expansion->g_n++; 
-        }
-
-        //left shift
-        else if(direction_shift == 1){
-            expansion -> coordinates.x-1;
-            expansion->g_n++;
-        }
-
-        //forward shift
-        else if(direction_shift == 2){
-            expansion -> coordinates.y+1;
-            expansion->g_n++;
-        }
-
-        //backward shift
-        else if(direction_shift == 3){
-            expansion -> coordinates.y-1;
-            expansion->g_n++;
-        }
-
-        else
-            return NULL;
-
-        
-        expansion -> h_n = findHn(expansion->coordinates, goal_location);
-        expansion -> f_n = expansion-> g_n + expansion -> f_n;   
-
+    return abs(goal_location.x - current_location.x) + abs(goal_location.y - current_location.y);
 };
 
-//places a newly created node into a priority queue using a binary search
-void placeInPQ(node *enqueue){
+node *makeNewNode(int direction_shift, node *expanding_node)
+{
 
-    int low = 0;
-    int high = frontier.size()-1;
-    int mid = 0;
- 
-    while(low<=high){
- 
-        mid = (high+low)/2;
- 
-        if(frontier[mid] -> f_n < enqueue-> f_n){
-            low = mid+1;
-        }
- 
-        else if(frontier[mid] -> f_n > enqueue -> f_n){
-            high = mid-1;
+    // creates a new node and copies over g(n) and current path
+    node *expansion = new node;
+    expansion->path = expanding_node->path;
+    expansion->g_n = expanding_node->g_n;
+    expansion->path.push_back(expanding_node->path.back());
 
-        }
- 
-        else
-            frontier.insert(mid, enqueue);
+    // for every direction shift:
+    //       checks that direction shift is within occupancy grid
+    //       checks if direction shift is into obstacle
 
+    // right shift
+    if (direction_shift == 0 && occupancy_grid.size() > expanding_node->path.back().x + 1 && occupancy_grid.at(expanding_node->path.back().x + 1).at(expanding_node->path.back().y) != 1)
+    {
+
+        expansion->path.back().x++;
     }
 
-    if(frontier.size()==0){
-        frontier.push_back(enqueue);
+    // left shift
+    else if (direction_shift == 1 && expanding_node->path.back().x != 0 && occupancy_grid.at(expanding_node->path.back().x - 1).at(expanding_node->path.back().y) != 1)
+    {
+
+        expansion->path.back().x--;
     }
- 
+
+    // forward shift
+    else if (direction_shift == 2 && occupancy_grid.size() > expanding_node->path.back().y + 1 && occupancy_grid.at(expanding_node->path.back().x).at(expanding_node->path.back().y + 1) != 1)
+    {
+
+        expansion->path.back().y++;
+    }
+
+    // backward shift
+    else if (direction_shift == 3 && expanding_node->path.back().x != 0 && occupancy_grid.at(expanding_node->path.back().x).at(expanding_node->path.back().y - 1) != 1)
+    {
+
+        expansion->path.back().y--;
+    }
+
+    else
+        return NULL;
+
+    // updates g(n), h(n), and f(n)
+    expansion->h_n = findHn(expansion->path.back(), goal_location);
+    expansion->g_n++;
+    expansion->f_n = expansion->g_n + expansion->f_n;
+
+    // returns newly created node
+    return expansion;
 };
 
-void expandNode(){
+void expandNode()
+{
 
-    node *expanded_node = frontier.front();
-    frontier.erase(frontier.begin());
+    // takes the starting location as the first node
+    node *expanded_node = frontier.top();
+    frontier.pop();
 
-    while(expanded_node->h_n != 0){
- 
-        //adds the node to the explored set hash table
- 
-        //expands the new node in all valid directions
-        //then places it in the correct location in the frontier priority queue
-        for(int i = 0; i<4; i++){
-            node * child = makeNewNode(i,expanded_node);
-            if (child != NULL){
-                placeInPQ(child);
+    while (expanded_node->h_n != 0)
+    {
+
+        // expands the new node in all valid directions
+        // then places it in the correct location in the frontier priority queue
+        for (int i = 0; i < 4; i++)
+        {
+            node *child = makeNewNode(i, expanded_node);
+            if (child != NULL)
+            {
+                frontier.push(child);
             }
+        }
 
-        } 
-        //selects the next node to be expanded and prints it
-        
-        expanded_node = frontier.front();
-        frontier.erase(frontier.begin());
+        // deletes expanded node
+        expanded_node = NULL;
+        delete expanded_node;
 
+        // sets expanded node the next node in the priority queue
+        expanded_node = frontier.top();
+        frontier.pop();
     }
-
-
 }
 
+// int main(vector<vector<int>> occupancy_grid, int* bot_loc, int* goal_loc){
 
-int main(){
+int main()
+{
 
-node * start = new node;
-start->g_n = 0;
-start->h_n = findHn(robot_location, goal_location);
-frontier.push_back(start);
- 
- 
-//starts searching for the solution
-expandNode();
+    // creates mock occupancy grid for testing
+    for (int i = 0; i < 10; i++)
+    {
+        vector<int> new_row;
+        for (int j = 0; j < 10; j++)
+        {
 
-return 0;
+            if (j % 3 == 0)
+            {
+                new_row.push_back(1);
+            }
+            else
+            {
+                new_row.push_back(0);
+            }
+        }
+
+        occupancy_grid.push_back(new_row);
+    }
+
+    // creates the coordinates for the robot location and goal location
+    robot_location.x = 9;
+    robot_location.y = 9;
+
+    goal_location.x = 0;
+    goal_location.y = 0;
+
+    // creates the node for the starting location
+    node *start = new node;
+    start->g_n = 0;
+    start->h_n = findHn(robot_location, goal_location);
+    start->path.push_back(robot_location);
+    frontier.push(start);
+
+    // starts searching for the solution
+    expandNode();
+
+    return 0;
 }
