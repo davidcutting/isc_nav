@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 #include "isc_nav/path_planner_node.hpp"
+#include <isc_nav/astar.hpp>
 
 namespace isc_nav
 {
@@ -46,6 +47,43 @@ PathPlanner::PathPlanner(rclcpp::NodeOptions options)
     path_publisher_ = this->create_publisher<nav_msgs::msg::Path>(
         "/navigation/path", 5
     );
+
+    // creates mock occupancy grid for testing
+    for (int i = 0; i < 10; i++)
+    {
+        vector<int> new_row;
+        for (int j = 0; j < 10; j++)
+        {
+
+            if (j % 3 == 0)
+            {
+                new_row.push_back(1);
+            }
+            else
+            {
+                new_row.push_back(0);
+            }
+        }
+
+        occupancy_grid.push_back(new_row);
+    }
+
+    // creates the coordinates for the robot location and goal location
+    robot_location.x = 9;
+    robot_location.y = 9;
+
+    goal_location.x = 0;
+    goal_location.y = 0;
+
+    // creates the node for the starting location
+    node *start = new node;
+    start->g_n = 0;
+    start->h_n = findHn(robot_location, goal_location);
+    start->path.push_back(robot_location);
+    frontier.push(start);
+
+    // starts searching for the solution
+    expandNode();
 }
 
 void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
