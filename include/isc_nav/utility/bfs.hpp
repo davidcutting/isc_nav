@@ -1,0 +1,4 @@
+namespace isc_nav
+{
+
+}
