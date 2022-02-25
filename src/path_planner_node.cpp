@@ -21,22 +21,29 @@
 // SOFTWARE.
 
 #include "isc_nav/path_planner_node.hpp"
-#include <isc_nav/astar.hpp>
+#include <isc_nav/utility/bfs.hpp>
 
 namespace isc_nav
 {
 
+using namespace std::chrono_literals; // for 1000ms?
+
 PathPlanner::PathPlanner(rclcpp::NodeOptions options)
 : Node("path_planner", options)
 {
+    this->declare_parameter<std::string>("robot_frame", "base_footprint");
+    this->declare_parameter<std::string>("map_frame", "map");
+    param_update_timer_ = this->create_wall_timer(
+      1000ms, std::bind(&PathPlanner::update_params, this)
+    );
+
+    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    transform_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+    transform_tolerance_ = tf2::durationFromSec(0.1);
+
     map_subscription_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/map", 3,
         std::bind(&PathPlanner::map_callback, this, std::placeholders::_1)
-    );
-
-    pos_subscription_ = this->create_subscription<geometry_msgs::msg::Pose>(
-        "/current_position", 10,
-        std::bind(&PathPlanner::pos_callback, this, std::placeholders::_1)
     );
 
     goal_subscription_ = this->create_subscription<geometry_msgs::msg::Pose>(
@@ -49,14 +56,42 @@ PathPlanner::PathPlanner(rclcpp::NodeOptions options)
     );
 }
 
+void PathPlanner::update_params()
+{
+    this->get_parameter("robot_frame", robot_frame_);
+    this->get_parameter("map_frame", map_frame_);
+}
+
 void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 {
     last_map_state_ = msg;
-}
 
-void PathPlanner::pos_callback(const geometry_msgs::msg::Pose::SharedPtr msg)
-{
-    last_pos_state_ = msg;
+    geometry_msgs::msg::PoseWithCovarianceStamped robot_pose{};
+    geometry_msgs::msg::PoseWithCovarianceStamped transformed_pose{};
+    robot_pose.header.frame_id = map_frame_;
+    robot_pose.header.stamp = this->get_clock()->now();
+
+    try
+    {   // perform the tf transform and publish the resulting pose
+        transformed_pose = tf_buffer_->transform(robot_pose, "map", transform_tolerance_);
+        *last_pos_state_ = transformed_pose.pose.pose;
+    }
+    catch (tf2::TransformException& ex)
+    {
+        RCLCPP_INFO(
+            this->get_logger(), "Could not transform %s to %s: %s",
+            map_frame_.c_str(), robot_frame_.c_str(), ex.what()
+        );
+        return;
+    }
+
+    if (last_goal_state_ != nullptr && last_pos_state_ != nullptr)
+    {
+        auto bfs = BreadthFirstSearch(*last_map_state_);
+        bfs.set_start(*last_pos_state_);
+        bfs.set_goal(*last_goal_state_);
+        path_publisher_->publish(bfs.get_path());
+    }
 }
 
 void PathPlanner::goal_callback(const geometry_msgs::msg::Pose::SharedPtr msg)

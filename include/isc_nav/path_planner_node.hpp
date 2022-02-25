@@ -28,7 +28,12 @@
 
 #include <memory>
 #include <functional>
-#include <nav_msgs/msg/detail/path__struct.hpp>
+
+#include <tf2/exceptions.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
 namespace isc_nav
 {
@@ -38,17 +43,24 @@ public:
     explicit PathPlanner(rclcpp::NodeOptions options);
 
 private:
+    tf2::Duration transform_tolerance_;
+    std::string robot_frame_;
+    std::string map_frame_;
+    rclcpp::TimerBase::SharedPtr param_update_timer_;
+
     nav_msgs::msg::OccupancyGrid::SharedPtr last_map_state_;
     geometry_msgs::msg::Pose::SharedPtr last_goal_state_;
     geometry_msgs::msg::Pose::SharedPtr last_pos_state_;
 
+    void update_params();
     void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-    void pos_callback(const geometry_msgs::msg::Pose::SharedPtr msg);
     void goal_callback(const geometry_msgs::msg::Pose::SharedPtr msg);
     
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_subscription_;
-    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr pos_subscription_;
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr goal_subscription_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_publisher_;
+
+    std::shared_ptr<tf2_ros::TransformListener> transform_listener_;
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
 };
 }  // namespace isc_nav
