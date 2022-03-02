@@ -33,7 +33,7 @@ typedef std::pair<Point2D, Point2D> Segment2D;
 
 namespace PurePursuit
 {
-class PurePursuit
+class PurePursuit 
 {
 public:
     PurePursuit(const Path& robot_path, const double& lookahead_distance);
@@ -54,7 +54,7 @@ public:
 
     /**
     * @brief will reset lookahead distance
-     * @param the new lookahead distance
+    * @param the new lookahead distance
     */
     void reset_lookahead_distance( const double& lookahead_distance );
 

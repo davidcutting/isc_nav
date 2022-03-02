@@ -1,7 +1,7 @@
 // MIT License
 //
 // Copyright (c) Intelligent Systems Club
-// Copyright (c) Aaron Cofield, JessRose Narsinghia, Andrew R. Davis
+// Copyright (c) Avery Girven
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,9 +31,12 @@
 
 namespace PurePursuit
 {
-PurePursuit::PurePursuit(const Path& robot_path, const double& lookahead_distance)
-	: m_robot_path(robot_path), m_lookahead_distance(lookahead_distance), m_current_segment(0)
+
+PurePursuit::PurePursuit(const Path& robot_path, const double& lookahead_distance): m_robot_path( robot_path )
+    , m_lookahead_distance( lookahead_distance )
+    , m_current_segment (0)
 {
+
 }
 
 std::pair<Point2D, double> PurePursuit::project_to_line_segment( Point2D p, Segment2D seg )
@@ -91,9 +94,8 @@ std::pair<Point2D, double> PurePursuit::project_to_line_segment( Point2D p, Segm
 
 std::tuple<Point3D, double, double> PurePursuit::get_target_state( const Point3D& state )
 {
-	Point3D lookaheadTarget = get_lookahead_point( state );
-	double headingTo = atan2( lookaheadTarget.y - state.y,
-															lookaheadTarget.x - state.x );  // heading to point
+	Point3D lookaheadTarget = get_lookahead_point(state);
+	double headingTo = atan2( lookaheadTarget.y - state.y, lookaheadTarget.x - state.x );  // heading to point
 															
 	double headingErr = ang_diff( headingTo, state.z );       // heading error
 	return std::make_tuple( lookaheadTarget, headingTo, headingErr );
@@ -103,36 +105,38 @@ double PurePursuit::path_length()
 {
 	double totalLength = 0;
 
-	for (uint32_t i = 0; i < m_robot_path.size() - 1; i++)
-	{
+	for ( int i = 0; i < ( m_robot_path.size() - 1 ); i++ )  // will use current point (i) and next point (i+1)
+	{            																						// until i = the second to last point in vector
 		totalLength += distanceFormula( m_robot_path.at( i ), m_robot_path.at( i + 1 ) );
 	}
 
-	return totalLength;
+		return totalLength;
 }
 
 // function to scale values in one range to values in another range -  proportional
 // scaling.. this is to find z value
-double PurePursuit::pscale(const double& x, const double& in_min, const double& in_max, const double& out_min, const double& out_max)
+double PurePursuit::pscale( const double& x, const double& in_min, const double& in_max,
+	const double& out_min, const double& out_max )
 {
 	return ( x - in_min ) * ( out_max - out_min ) / ( in_max - in_min ) + out_min;
 }
 
-void PurePursuit::reset_path(const Path& robot_path)
+void PurePursuit::reset_path( const Path& robot_path ) 
 { 
 	m_robot_path = robot_path; 
 }
 
-void PurePursuit::reset_lookahead_distance(const double& lookahead_distance)
+void PurePursuit::reset_lookahead_distance( const double& lookahead_distance )
 {
 	m_lookahead_distance = lookahead_distance;
 }
 
 Point3D PurePursuit::get_lookahead_point( const Point3D& state )
 {
-	// use get_location on path with state and then use get distance from point, add five to the return and call get point
+	// use get_location on path with state and then use get distance from point, add five
+	// to the return and call get point
 	Point2D pointOnPath = get_location_on_path( { state.x, state.y } ).first;
-// 		Point2D pointOnPath = get_current_segment_location_on_path( { state.x, state.y } ).first;
+//    Point2D pointOnPath = get_current_segment_location_on_path( { state.x, state.y } ).first;
 	double dist_to_point = get_distance_to_point( pointOnPath );
 	double lookaheadPointDistance = dist_to_point + m_lookahead_distance;
 //    if(m_current_segment < m_robot_path.size() && lookaheadPointDistance > distanceFormula(m_robot_path.at(m_current_segment),m_robot_path.at(m_current_segment + 1))){
@@ -146,12 +150,14 @@ Point3D PurePursuit::get_lookahead_point( const Point3D& state )
 
 Point3D PurePursuit::get_point_on_path( const double& position )
 {
-	// constructor of this class initializes the path as m_robot_path (type Path (vector))
+	// constructor of this class initializes the path as m_robot_path (type Path (vector)
+	// )
 	// use the vector to find equation of a line and then from vect at 0
 	// this function simply returns the x,y, and z coordinate that represents the path
 	// blank position points from the beginning of the vector
 	double numerator, denominator;
-	double sum = 0;  // must be initialized to the first path point bc for loop adds on the following point
+	double sum = 0;  // must be initialized to the first path point bc for loop adds on
+	// the following point
 	double distance, slope = 0;
 	double zVal = 0, yVal = 0, xVal = 0;
 	unsigned long vectSize = m_robot_path.size();
@@ -159,73 +165,74 @@ Point3D PurePursuit::get_point_on_path( const double& position )
 
 	if ( ( path_length() > position ) && ( position > 0 ) )
 	{
-		// loop until second to last point in path
-		for (uint32_t i = 0; i < vectSize - 1; i++ )
+		for ( unsigned long i = 0; i < ( vectSize - 1 ); i++ )
+		{  // loop until second to last point in path
+			numerator = m_robot_path.at( i + 1 ).y
+			- m_robot_path.at( i ).y;  // i + 1 looks ahead to next point in path in
+		// order to act as point 2 in the slope
+		// formula
+		denominator = m_robot_path.at( i + 1 ).x - m_robot_path.at(i).x;  // denominator subtracts x values of two points
+
+		if ( denominator != 0 )  // this means that line is not parallel to the y
+		// axis
 		{
-			// i + 1 looks ahead to next point in path in order to act as point 2 in the slope formula
-			numerator = m_robot_path.at( i + 1 ).y - m_robot_path.at( i ).y;
-			// denominator subtracts x values of two points
-			denominator = m_robot_path.at( i + 1 ).x - m_robot_path.at(i).x;
-
-			if ( denominator != 0 )  // this means that line is not parallel to the y axis
+			sum += distanceFormula( m_robot_path.at( i ),m_robot_path.at( i + 1 ) );  // distance formula
+			if ( sum >= position )  // if the distance is greater than that means the
+			// position is between i and i+1
 			{
-				sum += distanceFormula( m_robot_path.at( i ),m_robot_path.at( i + 1 ) );  // distance formula
-				if ( sum >= position )  // if the distance is greater than that means the
-				// position is between i and i+1
+				distance = sum - distanceFormula( m_robot_path.at( i ), m_robot_path.at( i + 1 ) );
+				distance = position - distance;
+				slope = numerator / denominator;
+
+				// in order to find x value of new point must use equation of a
+				// circle with radius of distance
+				// and center point of m_robot_path.at(i)... then the eq x = x1 +
+				// distance/ (sgrt(1 + m^2) is derived
+				if ( m_robot_path.at( i ).x < m_robot_path.at( i + 1 ).x )
 				{
-					distance = sum - distanceFormula( m_robot_path.at( i ), m_robot_path.at( i + 1 ) );
-					distance = position - distance;
-					slope = numerator / denominator;
+					xVal = m_robot_path.at( i ).x
+						+ ( distance / std::sqrt( 1 + ( slope * slope ) ) );
+				}
+				else
+				{
+					xVal = m_robot_path.at( i ).x
+						- ( distance / std::sqrt( 1 + ( slope * slope ) ) );
+				}
 
-					// in order to find x value of new point must use equation of a
-					// circle with radius of distance
-					// and center point of m_robot_path.at(i)... then the eq x = x1 +
-					// distance/ (sgrt(1 + m^2) is derived
-					if ( m_robot_path.at( i ).x < m_robot_path.at( i + 1 ).x )
-					{
-						xVal = m_robot_path.at( i ).x
-							+ ( distance / std::sqrt( 1 + ( slope * slope ) ) );
-					}
-					else
-					{
-						xVal = m_robot_path.at( i ).x
-							- ( distance / std::sqrt( 1 + ( slope * slope ) ) );
-					}
+				yVal = ( slope * xVal ) - ( slope * m_robot_path.at( i ).x )
+					+ m_robot_path.at( i ).y;
+				// FIND Z
+				zVal = pscale( distance, 0,
+					distanceFormula( m_robot_path.at( i ),
+					m_robot_path.at( i + 1 ) ),
+					m_robot_path.at( i ).z, m_robot_path.at( i + 1 ).z );
+					break;  // to break out of for loop
+			}
+					// else it does not do anything
+		}
+		else  // line is parallel to y-axis
+		{
+			sum += distanceFormula( m_robot_path.at( i ), m_robot_path.at( i + 1 ) );
+			if ( sum >= position )  // if the distance is greater than that means the
+			// position is between i and i+1
+			{
+				distance = sum - distanceFormula( m_robot_path.at( i ),
+					m_robot_path.at( i + 1 ) );
+				distance = position - distance;
 
-					yVal = ( slope * xVal ) - ( slope * m_robot_path.at( i ).x )
-						+ m_robot_path.at( i ).y;
-					// FIND Z
+				xVal = m_robot_path.at( i ).x;  // point only moved on y axis between i and i + 1
+				yVal = distance
+					+ m_robot_path.at( i ).y;  // add the remaining distance to push point up
+
+				// FIND Z
 					zVal = pscale( distance, 0,
-						distanceFormula( m_robot_path.at( i ),
-						m_robot_path.at( i + 1 ) ),
-						m_robot_path.at( i ).z, m_robot_path.at( i + 1 ).z );
-						break;  // to break out of for loop
-				}
-						// else it does not do anything
+					distanceFormula( m_robot_path.at( i ),
+					m_robot_path.at( i + 1 ) ),
+					m_robot_path.at( i ).z, m_robot_path.at( i + 1 ).z );
+
+					break;  // to break out of for loop
 			}
-			else  // line is parallel to y-axis
-			{
-				sum += distanceFormula( m_robot_path.at( i ), m_robot_path.at( i + 1 ) );
-				if ( sum >= position )  // if the distance is greater than that means the
-				// position is between i and i+1
-				{
-					distance = sum - distanceFormula( m_robot_path.at( i ),
-						m_robot_path.at( i + 1 ) );
-					distance = position - distance;
-
-					xVal = m_robot_path.at( i ).x;  // point only moved on y axis between i and i + 1
-					yVal = distance
-						+ m_robot_path.at( i ).y;  // add the remaining distance to push point up
-
-					// FIND Z
-						zVal = pscale( distance, 0,
-						distanceFormula( m_robot_path.at( i ),
-						m_robot_path.at( i + 1 ) ),
-						m_robot_path.at( i ).z, m_robot_path.at( i + 1 ).z );
-
-						break;  // to break out of for loop
-				}
-			}
+		}
 		}
 	}
 	else if ( position <= 0 )  // the postion is negative or 0 so return the first path location
