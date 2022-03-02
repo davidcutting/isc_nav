@@ -14,6 +14,9 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
   velocity_publisher = this->create_publisher<geometry_msgs::msg::Twist>(
     "/cmd_vel", 10);
 
+  carrot_publisher = this->create_publisher<geometry_msgs::msg::PointStamped>(
+    "/lookahead_point", 10);
+
   this->declare_parameter<float>("m_lookahead_distance", 0.1f);
   this->declare_parameter<std::string>("robot_frame", "base_footprint");
   this->declare_parameter<std::string>("map_frame", "map");

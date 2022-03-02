@@ -11,6 +11,7 @@
 #include "nav_msgs/msg/path.hpp"
 #include <geometry_msgs/msg/twist.hpp>
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/point_stamped.hpp"
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include <tf2/exceptions.h>
@@ -50,7 +51,7 @@ private:
 
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_subscription;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_publisher;
-    rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr carrot_publisher;
+    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr carrot_publisher;
     rclcpp::TimerBase::SharedPtr param_update_timer;
 };
 }  // namespace isc_nav
