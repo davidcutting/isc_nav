@@ -23,7 +23,7 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
   this->declare_parameter<std::string>("robot_frame", "base_footprint");
   this->declare_parameter<std::string>("map_frame", "map");
   this->declare_parameter<bool>("m_path_is_initialized", false);
-  this->declare_parameter("tf_timeout", 0.03);
+  this->declare_parameter<float>("tf_timeout", 0.03);
 
   tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   transform_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
