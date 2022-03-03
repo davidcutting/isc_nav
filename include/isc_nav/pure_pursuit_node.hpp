@@ -28,6 +28,7 @@ class PurePursuitNode : public rclcpp::Node
 public:
     PurePursuit::PurePursuit m_tracker;
     explicit PurePursuitNode(rclcpp::NodeOptions options);
+    void compute_velocity();
 
 private:
     Path m_path;

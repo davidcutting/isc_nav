@@ -12,7 +12,7 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
     std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
 
   velocity_publisher = this->create_publisher<geometry_msgs::msg::Twist>(
-    "/cmd_vel", 10);
+    "/vel", 10);
 
   carrot_publisher = this->create_publisher<geometry_msgs::msg::PointStamped>(
     "/lookahead_point", 10);
@@ -51,6 +51,42 @@ void PurePursuitNode::path_callback(const nav_msgs::msg::Path::SharedPtr msg)
     RCLCPP_INFO(this->get_logger(), "Got Path:)");
     m_path_is_initialized = true;
   }
+  compute_velocity();
+}
+
+void PurePursuitNode::compute_velocity()
+{
+  if(m_path_is_initialized)
+  {
+    geometry_msgs::msg::Twist velocity;
+    auto [lookahead, heading_to_point, heading_error] = m_tracker.get_target_state(get_pose());
+    velocity.linear.x = lookahead.x;
+    velocity.linear.y = lookahead.y;
+    velocity.linear.z = lookahead.z;
+
+    double angular_vel = constrain(heading_to_point*heading_error, -3.14, 3.14); // TODO parameter these bad bois
+    velocity.angular.z = angular_vel;
+    velocity_publisher->publish(velocity);
+
+    geometry_msgs::msg::PointStamped lookahead_point;
+    lookahead_point.header.stamp = this->get_clock()->now();
+    lookahead_point.header.frame_id = "map";
+    lookahead_point.point.x = lookahead.x;
+    lookahead_point.point.y = lookahead.y;
+    lookahead_point.point.z = 0.3; // TODO parameter this boy
+    carrot_publisher->publish(lookahead_point);
+
+  }
+}
+
+double PurePursuitNode::constrain(float x, float x_min, float x_max)
+{
+  if(x > x_max)
+    return x_max;
+  else if(x < x_min)
+    return x_min;
+  else
+    return x;
 }
 
 Path PurePursuitNode::to_path(const nav_msgs::msg::Path::SharedPtr msg)
