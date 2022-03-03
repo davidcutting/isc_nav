@@ -19,6 +19,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 namespace isc_nav
 {
@@ -34,7 +35,7 @@ private:
     std::string robot_frame;
     std::string map_frame;
 
-    double m_lookahead_distance;
+    double lookahead_distance;
     bool m_path_is_initialized;
     bool is_initialized;
 
@@ -44,6 +45,7 @@ private:
     float tf_timeout;
 
     void path_callback(const nav_msgs::msg::Path::SharedPtr msg);
+    double constrain(float x, float x_min, float x_max);
     void param_update();
     Path to_path(const nav_msgs::msg::Path::SharedPtr msg);
     Point3D to_point3d(const geometry_msgs::msg::PoseStamped pose);

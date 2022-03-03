@@ -1,0 +1,6 @@
+pure_puresuit:
+  ros__parameters:
+    lookahead_distance: 0.5
+    robot_frame: "base_footprint"
+    tf_timeout: 0.03
+
