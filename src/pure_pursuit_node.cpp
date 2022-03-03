@@ -12,18 +12,18 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
     std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
 
   velocity_publisher = this->create_publisher<geometry_msgs::msg::Twist>(
-    "/vel", 1);
+    "/nav_vel", 1);
 
   carrot_publisher = this->create_publisher<geometry_msgs::msg::PointStamped>(
     "/lookahead_point", 1);
 
-  this->declare_parameter<float>("lookahead_distance", 0.1f);
-  this->declare_parameter<float>("desired_linear_velocity", 1.0);
-  this->declare_parameter<float>("desired_angular_velocity", 1.0);
+  this->declare_parameter<float>("lookahead_distance", 1.5f);
+  this->declare_parameter<float>("desired_linear_velocity", 1.0f);
+  this->declare_parameter<float>("desired_angular_velocity", 1.0f);
   this->declare_parameter<std::string>("robot_frame", "base_footprint");
   this->declare_parameter<std::string>("map_frame", "map");
   this->declare_parameter<bool>("m_path_is_initialized", false);
-  this->declare_parameter<float>("tf_timeout", 0.03);
+  this->declare_parameter<float>("tf_timeout", 0.03f);
 
   tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   transform_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
@@ -61,10 +61,8 @@ void PurePursuitNode::compute_velocity()
     geometry_msgs::msg::Twist velocity;
     auto [lookahead, heading_to_point, heading_error] = m_tracker.get_target_state(get_pose());
     velocity.linear.x = lookahead.x;
-    velocity.linear.y = lookahead.y;
-    velocity.linear.z = lookahead.z;
 
-    double angular_vel = constrain(heading_to_point*heading_error, -3.14, 3.14); // TODO parameter these bad bois
+    double angular_vel = std::clamp(desired_angular_velocity*heading_error, -3.14, 3.14);
     velocity.angular.z = angular_vel;
     velocity_publisher->publish(velocity);
 
@@ -77,16 +75,6 @@ void PurePursuitNode::compute_velocity()
     carrot_publisher->publish(lookahead_point);
 
   }
-}
-
-double PurePursuitNode::constrain(float x, float x_min, float x_max)
-{
-  if(x > x_max)
-    return x_max;
-  else if(x < x_min)
-    return x_min;
-  else
-    return x;
 }
 
 Path PurePursuitNode::to_path(const nav_msgs::msg::Path::SharedPtr msg)
