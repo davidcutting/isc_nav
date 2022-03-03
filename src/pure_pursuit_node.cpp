@@ -12,10 +12,10 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
     std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
 
   velocity_publisher = this->create_publisher<geometry_msgs::msg::Twist>(
-    "/vel", 10);
+    "/vel", 1);
 
   carrot_publisher = this->create_publisher<geometry_msgs::msg::PointStamped>(
-    "/lookahead_point", 10);
+    "/lookahead_point", 1);
 
   this->declare_parameter<float>("lookahead_distance", 0.1f);
   this->declare_parameter<float>("desired_linear_velocity", 1.0);
