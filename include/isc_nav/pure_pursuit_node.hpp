@@ -35,7 +35,9 @@ private:
     std::string robot_frame;
     std::string map_frame;
 
-    double lookahead_distance;
+    float lookahead_distance;
+    float desired_linear_velocity;
+    float desired_angular_velocity;
     bool m_path_is_initialized;
     bool is_initialized;
 

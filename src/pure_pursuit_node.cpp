@@ -5,7 +5,7 @@ namespace isc_nav
 using namespace std::chrono_literals;
 
 PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
-  : Node("pure_pursuit", options), m_tracker(m_path, m_lookahead_distance), m_path_is_initialized(false)
+  : Node("pure_pursuit", options), m_tracker(m_path, lookahead_distance), m_path_is_initialized(false)
 {
   path_subscription = this->create_subscription<nav_msgs::msg::Path>(
     "/plan", 10,
@@ -18,6 +18,8 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
     "/lookahead_point", 10);
 
   this->declare_parameter<float>("lookahead_distance", 0.1f);
+  this->declare_parameter<float>("desired_linear_velocity", 1.0);
+  this->declare_parameter<float>("desired_angular_velocity", 1.0);
   this->declare_parameter<std::string>("robot_frame", "base_footprint");
   this->declare_parameter<std::string>("map_frame", "map");
   this->declare_parameter<bool>("m_path_is_initialized", false);
@@ -34,6 +36,8 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
 void PurePursuitNode::param_update()
 {
   this->get_parameter("lookahead_distance", lookahead_distance);
+  this->get_parameter("desired_linear_velocity", desired_linear_velocity);
+  this->get_parameter("desired_angular_velocity", desired_angular_velocity);
   this->get_parameter("tf_timeout", tf_timeout);
 }
 
