@@ -19,7 +19,7 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
 
   this->declare_parameter<float>("lookahead_distance", 1.5f);
   this->declare_parameter<float>("desired_linear_velocity", 1.0f);
-  this->declare_parameter<float>("desired_angular_velocity", 1.0f);
+  this->declare_parameter<float>("desired_angular_velocity", 0.5f);
   this->declare_parameter<std::string>("robot_frame", "base_footprint");
   this->declare_parameter<std::string>("map_frame", "map");
   this->declare_parameter<bool>("m_path_is_initialized", false);
@@ -60,10 +60,11 @@ void PurePursuitNode::compute_velocity()
   {
     geometry_msgs::msg::Twist velocity;
     auto [lookahead, heading_to_point, heading_error] = m_tracker.get_target_state(get_pose());
-    velocity.linear.x = lookahead.x;
+    velocity.linear.x = heading_to_point;  // maybe idk who knows....
+    std::cout << heading_to_point << std::endl;
 
     double angular_vel = std::clamp(desired_angular_velocity*heading_error, -3.14, 3.14);
-    velocity.angular.z = angular_vel;
+    velocity.angular.z = angular_vel;  // maybe idk who knows....
     velocity_publisher->publish(velocity);
 
     geometry_msgs::msg::PointStamped lookahead_point;

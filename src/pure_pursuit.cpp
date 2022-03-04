@@ -104,34 +104,33 @@ std::tuple<Point3D, double, double> PurePursuit::get_target_state( const Point3D
 double PurePursuit::path_length()
 {
 	double totalLength = 0;
-
-	for ( int i = 0; i < ( m_robot_path.size() - 1 ); i++ )  // will use current point (i) and next point (i+1)
-	{            																						// until i = the second to last point in vector
+	// will use current point (i) and next point (i+1) until i = the second to last point in vector
+	for (unsigned int i = 0; i < ( m_robot_path.size() - 1 ); i++)  
+	{            																						
 		totalLength += distanceFormula( m_robot_path.at( i ), m_robot_path.at( i + 1 ) );
 	}
 
-		return totalLength;
+	return totalLength;
 }
 
 // function to scale values in one range to values in another range -  proportional
 // scaling.. this is to find z value
-double PurePursuit::pscale( const double& x, const double& in_min, const double& in_max,
-	const double& out_min, const double& out_max )
+double PurePursuit::pscale(const double& x, const double& in_min, const double& in_max, const double& out_min, const double& out_max)
 {
 	return ( x - in_min ) * ( out_max - out_min ) / ( in_max - in_min ) + out_min;
 }
 
-void PurePursuit::reset_path( const Path& robot_path ) 
+void PurePursuit::reset_path(const Path& robot_path) 
 { 
 	m_robot_path = robot_path; 
 }
 
-void PurePursuit::reset_lookahead_distance( const double& lookahead_distance )
+void PurePursuit::reset_lookahead_distance(const double& lookahead_distance)
 {
 	m_lookahead_distance = lookahead_distance;
 }
 
-Point3D PurePursuit::get_lookahead_point( const Point3D& state )
+Point3D PurePursuit::get_lookahead_point(const Point3D& state)
 {
 	// use get_location on path with state and then use get distance from point, add five
 	// to the return and call get point
@@ -143,12 +142,12 @@ Point3D PurePursuit::get_lookahead_point( const Point3D& state )
 //        m_current_segment++;
 //    }
 
-	auto ret = get_point_on_path( lookaheadPointDistance );
+	auto ret = get_point_on_path(lookaheadPointDistance);
 //    std::cout << get_distance_to_point( pointOnPath ) << std::endl;
 	return ret;
 }
 
-Point3D PurePursuit::get_point_on_path( const double& position )
+Point3D PurePursuit::get_point_on_path(const double& position)
 {
 	// constructor of this class initializes the path as m_robot_path (type Path (vector)
 	// )
@@ -163,15 +162,15 @@ Point3D PurePursuit::get_point_on_path( const double& position )
 	unsigned long vectSize = m_robot_path.size();
 	Point3D newPoint;
 
-	if ( ( path_length() > position ) && ( position > 0 ) )
+	if ( (path_length() > position ) && ( position > 0 ))
 	{
-		for ( unsigned long i = 0; i < ( vectSize - 1 ); i++ )
+		for (unsigned long i = 0; i < ( vectSize - 1 ); i++)
 		{  // loop until second to last point in path
-			numerator = m_robot_path.at( i + 1 ).y
-			- m_robot_path.at( i ).y;  // i + 1 looks ahead to next point in path in
-		// order to act as point 2 in the slope
-		// formula
-		denominator = m_robot_path.at( i + 1 ).x - m_robot_path.at(i).x;  // denominator subtracts x values of two points
+			numerator = m_robot_path.at( i + 1 ).y - m_robot_path.at( i ).y;  
+			// i + 1 looks ahead to next point in path in
+			// order to act as point 2 in the slope
+			// formula
+			denominator = m_robot_path.at( i + 1 ).x - m_robot_path.at(i).x;  // denominator subtracts x values of two points
 
 		if ( denominator != 0 )  // this means that line is not parallel to the y
 		// axis
@@ -225,12 +224,12 @@ Point3D PurePursuit::get_point_on_path( const double& position )
 					+ m_robot_path.at( i ).y;  // add the remaining distance to push point up
 
 				// FIND Z
-					zVal = pscale( distance, 0,
-					distanceFormula( m_robot_path.at( i ),
-					m_robot_path.at( i + 1 ) ),
-					m_robot_path.at( i ).z, m_robot_path.at( i + 1 ).z );
+				zVal = pscale( distance, 0,
+				distanceFormula( m_robot_path.at( i ),
+				m_robot_path.at( i + 1 ) ),
+				m_robot_path.at( i ).z, m_robot_path.at( i + 1 ).z );
 
-					break;  // to break out of for loop
+				break;  // to break out of for loop
 			}
 		}
 		}
@@ -255,7 +254,7 @@ Point3D PurePursuit::get_point_on_path( const double& position )
 	return newPoint;
 }
 
-std::pair<Point2D, double> PurePursuit::get_current_segment_location_on_path( const Point2D& state )
+std::pair<Point2D, double> PurePursuit::get_current_segment_location_on_path(const Point2D& state)
 {
 	if(m_current_segment < m_robot_path.size()) {
 		Segment2D curr_seg(m_robot_path.at(m_current_segment).to2D(), m_robot_path.at(m_current_segment + 1).to2D());
@@ -267,7 +266,7 @@ std::pair<Point2D, double> PurePursuit::get_current_segment_location_on_path( co
 	}
 }
 
-std::pair<Point2D, double> PurePursuit::get_location_on_path( const Point2D& state )
+std::pair<Point2D, double> PurePursuit::get_location_on_path(const Point2D& state)
 {
 	double shortest_dist = std::numeric_limits<double>::max();
 	std::pair<Point2D, double> shortest_dist_point;
@@ -299,7 +298,7 @@ std::pair<Point2D, double> PurePursuit::get_location_on_path( const Point2D& sta
 	}
 }
 
-bool is_between( const Point2D& a, const Point2D& c, const Point2D& b )
+bool is_between(const Point2D& a, const Point2D& c, const Point2D& b)
 {
 	double crossproduct = ( c.y - a.y ) * ( b.x - a.x ) - ( c.x - a.x ) * ( b.y - a.y );
 
@@ -324,7 +323,7 @@ bool is_between( const Point2D& a, const Point2D& c, const Point2D& b )
 	return true;
 }
 
-double PurePursuit::get_distance_to_point(const Point2D& currPoint )  // assumption: the point 3D exists on the path
+double PurePursuit::get_distance_to_point(const Point2D& currPoint)  // assumption: the point 3D exists on the path
 {
 	double sum = 0;
 
