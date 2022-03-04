@@ -24,6 +24,7 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
   this->declare_parameter<std::string>("map_frame", "map");
   this->declare_parameter<bool>("m_path_is_initialized", false);
   this->declare_parameter<float>("tf_timeout", 0.03f);
+  m_tracker.reset_lookahead_distance(lookahead_distance);
 
   tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   transform_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
@@ -35,7 +36,7 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
 
 void PurePursuitNode::param_update()
 {
-  this->get_parameter("lookahead_distance", lookahead_distance);
+  this->get_parameter("lookahead_distance", lookahead_distance); // TODO make this actually do something
   this->get_parameter("desired_linear_velocity", desired_linear_velocity);
   this->get_parameter("desired_angular_velocity", desired_angular_velocity);
   this->get_parameter("tf_timeout", tf_timeout);
@@ -60,10 +61,10 @@ void PurePursuitNode::compute_velocity()
   {
     geometry_msgs::msg::Twist velocity;
     auto [lookahead, heading_to_point, heading_error] = m_tracker.get_target_state(get_pose());
-    velocity.linear.x = heading_to_point;  // maybe idk who knows....
+    velocity.linear.x = desired_linear_velocity;  // TODO constrain this value based on lookahead
     std::cout << heading_to_point << std::endl;
 
-    double angular_vel = std::clamp(desired_angular_velocity*heading_error, -3.14, 3.14);
+    double angular_vel = std::clamp(desired_angular_velocity*heading_error*desired_linear_velocity, -3.14, 3.14);
     velocity.angular.z = angular_vel;  // maybe idk who knows....
     velocity_publisher->publish(velocity);
 
@@ -74,7 +75,6 @@ void PurePursuitNode::compute_velocity()
     lookahead_point.point.y = lookahead.y;
     lookahead_point.point.z = 0.3; // TODO parameter this boy
     carrot_publisher->publish(lookahead_point);
-
   }
 }
 

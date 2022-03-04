@@ -32,14 +32,14 @@
 namespace PurePursuit
 {
 
-PurePursuit::PurePursuit(const Path& robot_path, const double& lookahead_distance): m_robot_path( robot_path )
-    , m_lookahead_distance( lookahead_distance )
-    , m_current_segment (0)
+PurePursuit::PurePursuit(const Path& robot_path, const double& lookahead_distance): m_robot_path(robot_path)
+  , m_lookahead_distance(lookahead_distance)
+  , m_current_segment (0)
 {
 
 }
 
-std::pair<Point2D, double> PurePursuit::project_to_line_segment( Point2D p, Segment2D seg )
+std::pair<Point2D, double> PurePursuit::project_to_line_segment(Point2D p, Segment2D seg)
 {
 	/* This implementation is a slightly modified version of the function from :
 	 http://forums.codeguru.com/showthread.php?194400-Distance-between-point-and-line-segment
@@ -59,7 +59,7 @@ std::pair<Point2D, double> PurePursuit::project_to_line_segment( Point2D p, Segm
 
 	double s = ( ( ay - cy ) * ( bx - ax ) - ( ax - cx ) * ( by - ay ) ) / r_denomenator;
 
-	double distanceLine = fabs( s ) * sqrt( r_denomenator );
+	double distanceLine = fabs(s) * sqrt(r_denomenator);
 	double distanceSegment = -1;
 	//
 	// (xx,yy) is the point on the lineSegment closest to (cx,cy)
@@ -67,7 +67,7 @@ std::pair<Point2D, double> PurePursuit::project_to_line_segment( Point2D p, Segm
 	double xx = px;
 	double yy = py;
 
-	if ( ( r >= 0 ) && ( r <= 1 ) )
+	if ((r >= 0 ) && (r <= 1 ))
 	{
 		distanceSegment = distanceLine;
 	}
@@ -92,22 +92,22 @@ std::pair<Point2D, double> PurePursuit::project_to_line_segment( Point2D p, Segm
 	return std::make_pair( Point2D( xx, yy ), distanceSegment );
 }
 
-std::tuple<Point3D, double, double> PurePursuit::get_target_state( const Point3D& state )
+std::tuple<Point3D, double, double> PurePursuit::get_target_state(const Point3D& state)
 {
 	Point3D lookaheadTarget = get_lookahead_point(state);
-	double headingTo = atan2( lookaheadTarget.y - state.y, lookaheadTarget.x - state.x );  // heading to point
+	double headingTo = atan2(lookaheadTarget.y - state.y, lookaheadTarget.x - state.x);  // heading to point
 															
-	double headingErr = ang_diff( headingTo, state.z );       // heading error
-	return std::make_tuple( lookaheadTarget, headingTo, headingErr );
+	double headingErr = ang_diff(headingTo, state.z);       // heading error
+	return std::make_tuple(lookaheadTarget, headingTo, headingErr);
 }
 
 double PurePursuit::path_length()
 {
 	double totalLength = 0;
 	// will use current point (i) and next point (i+1) until i = the second to last point in vector
-	for (unsigned int i = 0; i < ( m_robot_path.size() - 1 ); i++)  
+	for (unsigned int i = 0; i < (m_robot_path.size() - 1); i++)  
 	{            																						
-		totalLength += distanceFormula( m_robot_path.at( i ), m_robot_path.at( i + 1 ) );
+		totalLength += distanceFormula(m_robot_path.at(i), m_robot_path.at(i + 1));
 	}
 
 	return totalLength;
@@ -134,23 +134,22 @@ Point3D PurePursuit::get_lookahead_point(const Point3D& state)
 {
 	// use get_location on path with state and then use get distance from point, add five
 	// to the return and call get point
-	Point2D pointOnPath = get_location_on_path( { state.x, state.y } ).first;
-//    Point2D pointOnPath = get_current_segment_location_on_path( { state.x, state.y } ).first;
-	double dist_to_point = get_distance_to_point( pointOnPath );
+	Point2D pointOnPath = get_location_on_path({state.x, state.y}).first;
+	// Point2D pointOnPath = get_current_segment_location_on_path( { state.x, state.y } ).first;
+	double dist_to_point = get_distance_to_point(pointOnPath);
 	double lookaheadPointDistance = dist_to_point + m_lookahead_distance;
-//    if(m_current_segment < m_robot_path.size() && lookaheadPointDistance > distanceFormula(m_robot_path.at(m_current_segment),m_robot_path.at(m_current_segment + 1))){
-//        m_current_segment++;
-//    }
+	// if(m_current_segment < m_robot_path.size() && lookaheadPointDistance > distanceFormula(m_robot_path.at(m_current_segment),m_robot_path.at(m_current_segment + 1))){
+	// 	m_current_segment++;
+	// }
 
 	auto ret = get_point_on_path(lookaheadPointDistance);
-//    std::cout << get_distance_to_point( pointOnPath ) << std::endl;
+	// std::cout << get_distance_to_point( pointOnPath ) << std::endl;
 	return ret;
 }
 
 Point3D PurePursuit::get_point_on_path(const double& position)
 {
-	// constructor of this class initializes the path as m_robot_path (type Path (vector)
-	// )
+	// constructor of this class initializes the path as m_robot_path (type Path (vector))
 	// use the vector to find equation of a line and then from vect at 0
 	// this function simply returns the x,y, and z coordinate that represents the path
 	// blank position points from the beginning of the vector
@@ -205,7 +204,7 @@ Point3D PurePursuit::get_point_on_path(const double& position)
 					distanceFormula( m_robot_path.at( i ),
 					m_robot_path.at( i + 1 ) ),
 					m_robot_path.at( i ).z, m_robot_path.at( i + 1 ).z );
-					break;  // to break out of for loop
+					break; 
 			}
 					// else it does not do anything
 		}
@@ -284,7 +283,7 @@ std::pair<Point2D, double> PurePursuit::get_location_on_path(const Point2D& stat
 			m_robot_path.at( i + 1 ).to2D() ) );
 		if ( line_proj.second < shortest_dist )
 		{
-			shortest_dist       = line_proj.second;
+			shortest_dist = line_proj.second;
 			shortest_dist_point = line_proj;
 		}
 	}
