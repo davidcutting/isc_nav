@@ -8,7 +8,7 @@ PurePursuitNode::PurePursuitNode(rclcpp::NodeOptions options)
   : Node("pure_pursuit", options), m_tracker(m_path, lookahead_distance), m_path_is_initialized(false)
 {
   path_subscription = this->create_subscription<nav_msgs::msg::Path>(
-    "/plan", 10,
+    "/path", 10,
     std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
 
   velocity_publisher = this->create_publisher<geometry_msgs::msg::Twist>(

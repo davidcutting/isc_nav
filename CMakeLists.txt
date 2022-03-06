@@ -56,6 +56,9 @@ ament_target_dependencies(
 target_include_directories(pure_pursuit  PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+
+install(TARGETS path_planner_node pure_pursuit
+  DESTINATION lib/${PROJECT_NAME})
   
 install(
   DIRECTORY config launch

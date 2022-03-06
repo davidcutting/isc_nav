@@ -47,12 +47,12 @@ PathPlanner::PathPlanner(rclcpp::NodeOptions options)
     );
 
     goal_subscription_ = this->create_subscription<geometry_msgs::msg::Pose>(
-        "/navigation/goal", 10,
+        "/goal_pose", 10,
         std::bind(&PathPlanner::goal_callback, this, std::placeholders::_1)
     );
 
     path_publisher_ = this->create_publisher<nav_msgs::msg::Path>(
-        "/navigation/path", 5
+        "/path", 5
     );
 }
 
