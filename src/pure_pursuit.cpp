@@ -188,17 +188,14 @@ Point3D PurePursuit::get_point_on_path(const double& position)
 				// distance/ (sgrt(1 + m^2) is derived
 				if ( m_robot_path.at( i ).x < m_robot_path.at( i + 1 ).x )
 				{
-					xVal = m_robot_path.at( i ).x
-						+ ( distance / std::sqrt( 1 + ( slope * slope ) ) );
+					xVal = m_robot_path.at( i ).x + ( distance / std::sqrt( 1 + ( slope * slope ) ) );
 				}
 				else
 				{
-					xVal = m_robot_path.at( i ).x
-						- ( distance / std::sqrt( 1 + ( slope * slope ) ) );
+					xVal = m_robot_path.at( i ).x - ( distance / std::sqrt( 1 + ( slope * slope ) ) );
 				}
 
-				yVal = ( slope * xVal ) - ( slope * m_robot_path.at( i ).x )
-					+ m_robot_path.at( i ).y;
+				yVal = ( slope * xVal ) - ( slope * m_robot_path.at( i ).x ) + m_robot_path.at( i ).y;
 				// FIND Z
 				zVal = pscale( distance, 0,
 					distanceFormula( m_robot_path.at( i ),
@@ -214,13 +211,11 @@ Point3D PurePursuit::get_point_on_path(const double& position)
 			if ( sum >= position )  // if the distance is greater than that means the
 			// position is between i and i+1
 			{
-				distance = sum - distanceFormula( m_robot_path.at( i ),
-					m_robot_path.at( i + 1 ) );
+				distance = sum - distanceFormula( m_robot_path.at( i ), m_robot_path.at( i + 1 ) );
 				distance = position - distance;
 
 				xVal = m_robot_path.at( i ).x;  // point only moved on y axis between i and i + 1
-				yVal = distance
-					+ m_robot_path.at( i ).y;  // add the remaining distance to push point up
+				yVal = distance + m_robot_path.at( i ).y;  // add the remaining distance to push point up
 
 				// FIND Z
 				zVal = pscale( distance, 0,
