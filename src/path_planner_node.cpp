@@ -29,10 +29,11 @@ namespace isc_nav
 using namespace std::chrono_literals; // for 1000ms?
 
 PathPlanner::PathPlanner(rclcpp::NodeOptions options)
-: Node("path_planner", options)
+: Node("path_planner", options), last_map_state_{}, last_goal_state_{}, last_pos_state_{}
 {
     this->declare_parameter<std::string>("robot_frame", "base_footprint");
     this->declare_parameter<std::string>("map_frame", "map");
+    update_params();
     param_update_timer_ = this->create_wall_timer(
       1000ms, std::bind(&PathPlanner::update_params, this)
     );
@@ -46,7 +47,7 @@ PathPlanner::PathPlanner(rclcpp::NodeOptions options)
         std::bind(&PathPlanner::map_callback, this, std::placeholders::_1)
     );
 
-    goal_subscription_ = this->create_subscription<geometry_msgs::msg::Pose>(
+    goal_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
         "/goal_pose", 10,
         std::bind(&PathPlanner::goal_callback, this, std::placeholders::_1)
     );
@@ -65,6 +66,11 @@ void PathPlanner::update_params()
 void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 {
     last_map_state_ = msg;
+
+    if (last_goal_state_ == nullptr && last_pos_state_ == nullptr)
+    {
+        return;
+    }
 
     geometry_msgs::msg::PoseWithCovarianceStamped robot_pose{};
     geometry_msgs::msg::PoseWithCovarianceStamped transformed_pose{};
@@ -85,17 +91,15 @@ void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg
         return;
     }
 
-    if (last_goal_state_ != nullptr && last_pos_state_ != nullptr)
-    {
-        auto bfs = BreadthFirstSearch(*last_map_state_);
-        bfs.set_start(*last_pos_state_);
-        bfs.set_goal(*last_goal_state_);
-        path_publisher_->publish(bfs.get_path());
-    }
+    auto bfs = BreadthFirstSearch(*last_map_state_);
+    bfs.set_start(*last_pos_state_);
+    bfs.set_goal(last_goal_state_->pose);
+    path_publisher_->publish(bfs.get_path());
 }
 
-void PathPlanner::goal_callback(const geometry_msgs::msg::Pose::SharedPtr msg)
+void PathPlanner::goal_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
+    RCLCPP_INFO(this->get_logger(), "Received a new goal pose.");
     last_goal_state_ = msg;
 }
 

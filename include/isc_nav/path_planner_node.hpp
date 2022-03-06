@@ -50,15 +50,15 @@ private:
     rclcpp::TimerBase::SharedPtr param_update_timer_;
 
     nav_msgs::msg::OccupancyGrid::SharedPtr last_map_state_;
-    geometry_msgs::msg::Pose::SharedPtr last_goal_state_;
+    geometry_msgs::msg::PoseStamped::SharedPtr last_goal_state_;
     geometry_msgs::msg::Pose::SharedPtr last_pos_state_;
 
     void update_params();
     void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-    void goal_callback(const geometry_msgs::msg::Pose::SharedPtr msg);
+    void goal_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_subscription_;
-    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr goal_subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_subscription_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_publisher_;
 
     std::shared_ptr<tf2_ros::TransformListener> transform_listener_;
