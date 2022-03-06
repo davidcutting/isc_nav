@@ -20,6 +20,9 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 # path planner
 add_executable(path_planner_node src/path_planner_node.cpp)
@@ -28,6 +31,9 @@ ament_target_dependencies(
   geometry_msgs
   rclcpp
   nav_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
 )
 target_include_directories(path_planner_node  PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
