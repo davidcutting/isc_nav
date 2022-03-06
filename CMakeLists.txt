@@ -49,14 +49,13 @@ ament_target_dependencies(
   geometry_msgs
   rclcpp
   nav_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
 )
 target_include_directories(pure_pursuit  PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-
-
-install(TARGETS pure_pursuit path_planner_node
-  DESTINATION lib/${PROJECT_NAME})
   
 #install( TODO add when we have configs
 #  DIRECTORY config
