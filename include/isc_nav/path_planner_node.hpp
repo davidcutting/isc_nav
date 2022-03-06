@@ -47,6 +47,7 @@ private:
     tf2::Duration transform_tolerance_;
     std::string robot_frame_;
     std::string map_frame_;
+    float tf_timeout_;
     rclcpp::TimerBase::SharedPtr param_update_timer_;
 
     nav_msgs::msg::OccupancyGrid::SharedPtr last_map_state_;
@@ -54,6 +55,7 @@ private:
     geometry_msgs::msg::Pose::SharedPtr last_pos_state_;
 
     void update_params();
+    void update_plan();
     void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
     void goal_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     

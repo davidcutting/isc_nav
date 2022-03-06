@@ -35,10 +35,10 @@ def generate_launch_description():
     get_package_share_directory('isc_nav')
 
     # Launch arguments
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     robot_frame = LaunchConfiguration('robot_frame', default='base_footprint')
     map_frame = LaunchConfiguration('map_frame', default='map')
-    tf_timeout = LaunchConfiguration('tf_timeout', default='0.03')
+    tf_timeout = LaunchConfiguration('tf_timeout', default='0.1')
     lookahead_distance = LaunchConfiguration('lookahead_distance', default='0.5')
     desired_linear_velocity = LaunchConfiguration('desired_linear_velocity', default='1.0')
     desired_angular_velocity = LaunchConfiguration('desired_angular_velocity', default='1.5')
@@ -66,12 +66,13 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
             'robot_frame': robot_frame,
             'map_frame': map_frame,
+            'tf_timeout': tf_timeout,
         }])
 
     return LaunchDescription([
         # Launch Arguments
         DeclareLaunchArgument('use_sim_time',
-                              default_value='false',
+                              default_value='true',
                               description='Joy button which triggers a drive mode switch event'),
 
         # Nodes

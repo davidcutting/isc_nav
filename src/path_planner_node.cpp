@@ -33,6 +33,7 @@ PathPlanner::PathPlanner(rclcpp::NodeOptions options)
 {
     this->declare_parameter<std::string>("robot_frame", "base_footprint");
     this->declare_parameter<std::string>("map_frame", "map");
+    this->declare_parameter<float>("tf_timeout", 0.03f);
     update_params();
     param_update_timer_ = this->create_wall_timer(
       1000ms, std::bind(&PathPlanner::update_params, this)
@@ -61,26 +62,22 @@ void PathPlanner::update_params()
 {
     this->get_parameter("robot_frame", robot_frame_);
     this->get_parameter("map_frame", map_frame_);
+    this->get_parameter("tf_timeout", tf_timeout_);
+    transform_tolerance_ = tf2::durationFromSec(tf_timeout_);
 }
 
-void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
+void PathPlanner::update_plan()
 {
-    last_map_state_ = msg;
-
-    if (last_goal_state_ == nullptr && last_pos_state_ == nullptr)
-    {
-        return;
-    }
-
     geometry_msgs::msg::PoseWithCovarianceStamped robot_pose{};
     geometry_msgs::msg::PoseWithCovarianceStamped transformed_pose{};
-    robot_pose.header.frame_id = map_frame_;
+    robot_pose.header.frame_id = robot_frame_;
     robot_pose.header.stamp = this->get_clock()->now();
 
     try
     {   // perform the tf transform and publish the resulting pose
+        RCLCPP_INFO(this->get_logger(), "Getting robot's current location.");
         transformed_pose = tf_buffer_->transform(robot_pose, "map", transform_tolerance_);
-        *last_pos_state_ = transformed_pose.pose.pose;
+        last_pos_state_ = std::make_shared<geometry_msgs::msg::Pose>(transformed_pose.pose.pose);
     }
     catch (tf2::TransformException& ex)
     {
@@ -91,16 +88,43 @@ void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg
         return;
     }
 
+    RCLCPP_INFO(this->get_logger(), "Updating plan.");
+
     auto bfs = BreadthFirstSearch(*last_map_state_);
     bfs.set_start(*last_pos_state_);
     bfs.set_goal(last_goal_state_->pose);
-    path_publisher_->publish(bfs.get_path());
+    nav_msgs::msg::Path bfs_path = bfs.get_path();
+    bfs_path.header.frame_id = map_frame_;
+    bfs_path.header.stamp = this->get_clock()->now();
+    path_publisher_->publish(bfs_path);
+}
+
+void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
+{
+    RCLCPP_INFO(this->get_logger(), "Received a new map.");
+    last_map_state_ = msg;
+
+    if (last_goal_state_ == nullptr)
+    {
+        RCLCPP_INFO(this->get_logger(), "Skipping plan update because we're missing goal info.");
+        return;
+    }
+
+    update_plan();
 }
 
 void PathPlanner::goal_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
     RCLCPP_INFO(this->get_logger(), "Received a new goal pose.");
     last_goal_state_ = msg;
+
+    if (last_map_state_ == nullptr)
+    {
+        RCLCPP_INFO(this->get_logger(), "Skipping plan update because we're missing map info.");
+        return;
+    }
+
+    update_plan();
 }
 
 }  // namespace isc_nav
