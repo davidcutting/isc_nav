@@ -1,0 +1,8 @@
+pure_puresuit:
+  ros__parameters:
+    lookahead_distance: 0.5
+    robot_frame: "base_footprint"
+    tf_timeout: 0.03
+    desired_linear_velocity: 1.0
+    desired_angular_velocity: 1.5
+
