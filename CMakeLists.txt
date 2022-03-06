@@ -57,10 +57,10 @@ target_include_directories(pure_pursuit  PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
   
-#install( TODO add when we have configs
-#  DIRECTORY config
-#  DESTINATION share/${PROJECT_NAME}/
-#)
+install(
+  DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
