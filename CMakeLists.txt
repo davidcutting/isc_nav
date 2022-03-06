@@ -58,7 +58,7 @@ target_include_directories(pure_pursuit  PUBLIC
   $<INSTALL_INTERFACE:include>)
   
 install(
-  DIRECTORY config
+  DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}/
 )
 
