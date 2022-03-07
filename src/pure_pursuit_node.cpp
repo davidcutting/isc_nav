@@ -44,6 +44,12 @@ void PurePursuitNode::param_update()
 
 void PurePursuitNode::path_callback(const nav_msgs::msg::Path::SharedPtr msg)
 {
+  if (msg->poses.empty())
+  {
+    RCLCPP_INFO(this->get_logger(), "Received an empty path.");
+    return;
+  }
+
   m_path = to_path(msg);
   m_tracker.reset_path(m_path);
 

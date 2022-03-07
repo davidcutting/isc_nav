@@ -45,6 +45,8 @@ public:
             // add neighbors to list and build graph
             for (auto next : map_.neighbors(current))
             {
+                // Don't add it to the open list if we already visited.
+                if (came_from.find(next) != came_from.end()) continue;
                 open_list_.emplace(next);
                 came_from[next] = current;
             }

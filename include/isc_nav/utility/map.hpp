@@ -36,8 +36,25 @@ public:
         : size_x_{grid.info.width}, size_y_{grid.info.height}, resolution_{grid.info.resolution}
     {
         costmap_.resize(size_x_ * size_y_);
-        std::copy(grid.data.begin(), grid.data.end(), costmap_.begin());
+        for (uint32_t i = 0; i < size_x_; i++)
+        {
+            for (uint32_t j = 0; j < size_y_; j++)
+            {
+                // convert occupancy grid to costmap
+                costmap_[j * size_x_ + i] = occ_to_cost(grid.data[j * size_x_ + i]);
+            }
+        }
         origin_ = Point2D(grid.info.origin.position.x, grid.info.origin.position.y);
+    }
+
+    uint8_t occ_to_cost(const int8_t& occ_prob) const noexcept
+    {
+        if (occ_prob == OCC_GRID_UNKNOWN) return NO_INFORMATION;
+        if (occ_prob == OCC_GRID_FREE) return FREE_SPACE;
+        if (occ_prob == OCC_GRID_OCCUPIED) return LETHAL_OBSTACLE;
+        // Linear transform from occ grid range to cost range
+        constexpr double transform_ratio = (LETHAL_OBSTACLE - FREE_SPACE) / (OCC_GRID_OCCUPIED - OCC_GRID_FREE);
+        return std::round(static_cast<double>(occ_prob) * transform_ratio);
     }
 
     uint8_t at(const Point2D& location) const noexcept
@@ -52,9 +69,10 @@ public:
         return costmap_.at(y * size_x_ + x);
     }
 
-    bool valid_cell(const uint32_t& x, const uint32_t& y) const noexcept
+    bool valid_cell(const int32_t& x, const int32_t& y) const noexcept
     {
-        if (x > size_x_ || y > size_y_)
+        if (x > size_x_ || y > size_y_ ||
+            x < 0       || y < 0)
         {
             return false;
         }
@@ -67,8 +85,8 @@ public:
     std::vector<Point2D> neighbors(const Point2D& current)
     {
         std::vector<Point2D> neighbors{};
-        uint32_t current_x = static_cast<uint32_t>((current.x - origin_.x) / resolution_);
-        uint32_t current_y = static_cast<uint32_t>((current.y - origin_.y) / resolution_);
+        int32_t current_x = static_cast<int32_t>((current.x - origin_.x) / resolution_);
+        int32_t current_y = static_cast<int32_t>((current.y - origin_.y) / resolution_);
         
         // Check if a cell in each cardinal direction is valid. If so, put it into neighbor vector
         if (valid_cell(current_x    , current_y + 1)) neighbors.emplace_back(current_x    , current_y + 1); // top
@@ -86,5 +104,15 @@ private:
     Point2D origin_;
 
     std::vector<uint8_t> costmap_;
+
+    // Values cooresponding to definition of Occupancy Grid in ROS
+    static constexpr int8_t OCC_GRID_UNKNOWN = -1;
+    static constexpr int8_t OCC_GRID_FREE = 0;
+    static constexpr int8_t OCC_GRID_OCCUPIED = 100;
+
+    // Our definition of cost
+    static constexpr uint8_t NO_INFORMATION = 255;
+    static constexpr uint8_t LETHAL_OBSTACLE = 254;
+    static constexpr uint8_t FREE_SPACE = 0;
 };
 } // namespace isc_nav
