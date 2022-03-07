@@ -25,6 +25,10 @@ inline bool operator!=( const Point2D& lhs, const Point2D& rhs )
 {
     return ( lhs.x != rhs.x && lhs.y != rhs.y );
 }
+inline Point2D operator-( const Point2D& lhs, const Point2D& rhs )
+{
+    return Point2D(lhs.x - rhs.x, lhs.y - rhs.y);
+}
 
 /**
  * @brief: data structure to present x, y, and z (velocity) of the robot

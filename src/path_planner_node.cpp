@@ -74,9 +74,9 @@ void PathPlanner::update_plan()
     robot_pose.header.stamp = this->get_clock()->now();
 
     try
-    {   // perform the tf transform and publish the resulting pose
-        RCLCPP_INFO(this->get_logger(), "Getting robot's current location.");
-        transformed_pose = tf_buffer_->transform(robot_pose, "map", transform_tolerance_);
+    {
+        // get robot pose in map
+        transformed_pose = tf_buffer_->transform(robot_pose, map_frame_, transform_tolerance_);
         last_pos_state_ = std::make_shared<geometry_msgs::msg::Pose>(transformed_pose.pose.pose);
     }
     catch (tf2::TransformException& ex)
@@ -91,9 +91,8 @@ void PathPlanner::update_plan()
     RCLCPP_INFO(this->get_logger(), "Updating plan.");
 
     auto bfs = BreadthFirstSearch(*last_map_state_);
-    bfs.set_start(*last_pos_state_);
-    bfs.set_goal(last_goal_state_->pose);
-    nav_msgs::msg::Path bfs_path = bfs.get_path();
+    nav_msgs::msg::Path bfs_path = bfs.get_path(*last_pos_state_, last_goal_state_->pose);
+    
     bfs_path.header.frame_id = map_frame_;
     bfs_path.header.stamp = this->get_clock()->now();
     path_publisher_->publish(bfs_path);
@@ -116,7 +115,22 @@ void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg
 void PathPlanner::goal_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
     RCLCPP_INFO(this->get_logger(), "Received a new goal pose.");
-    last_goal_state_ = msg;
+    geometry_msgs::msg::PoseStamped transformed_pose{};
+
+    try
+    {
+        // transform goal to map frame if it isn't
+        transformed_pose = tf_buffer_->transform(*msg, map_frame_, transform_tolerance_);
+        last_goal_state_ = std::make_shared<geometry_msgs::msg::PoseStamped>(transformed_pose);
+    }
+    catch (tf2::TransformException& ex)
+    {
+        RCLCPP_INFO(
+            this->get_logger(), "Could not transform %s to %s: %s",
+            map_frame_.c_str(), msg->header.frame_id.c_str(), ex.what()
+        );
+        return;
+    }
 
     if (last_map_state_ == nullptr)
     {

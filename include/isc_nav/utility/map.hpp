@@ -85,14 +85,49 @@ public:
     std::vector<Point2D> neighbors(const Point2D& current)
     {
         std::vector<Point2D> neighbors{};
+
+        // transform floating point x,y into map indices
         int32_t current_x = static_cast<int32_t>((current.x - origin_.x) / resolution_);
         int32_t current_y = static_cast<int32_t>((current.y - origin_.y) / resolution_);
-        
-        // Check if a cell in each cardinal direction is valid. If so, put it into neighbor vector
-        if (valid_cell(current_x    , current_y + 1)) neighbors.emplace_back(current_x    , current_y + 1); // top
-        if (valid_cell(current_x + 1, current_y    )) neighbors.emplace_back(current_x + 1, current_y    ); // right
-        if (valid_cell(current_x    , current_y - 1)) neighbors.emplace_back(current_x    , current_y - 1); // bottom
-        if (valid_cell(current_x - 1, current_y    )) neighbors.emplace_back(current_x - 1, current_y    ); // left
+
+        int32_t top_x = current_x;
+        int32_t top_y = current_y + 1;
+
+        int32_t right_x = current_x + 1;
+        int32_t right_y = current_y;
+
+        int32_t bottom_x = current_x;
+        int32_t bottom_y = current_y - 1;
+
+        int32_t left_x = current_x - 1;
+        int32_t left_y = current_y;
+
+        // add neighbor to list if neighbor is a valid cell
+        if (valid_cell(top_x, top_y))
+        {
+            // transform map indices back to floating point x,y
+            double neigh_x = static_cast<double>(top_x * resolution_ + origin_.x);
+            double neigh_y = static_cast<double>(top_y * resolution_ + origin_.y);
+            neighbors.emplace_back(neigh_x, neigh_y);
+        }
+        if (valid_cell(right_x, right_y))
+        {
+            double neigh_x = static_cast<double>(right_x * resolution_ + origin_.x);
+            double neigh_y = static_cast<double>(right_y * resolution_ + origin_.y);
+            neighbors.emplace_back(neigh_x, neigh_y);
+        }
+        if (valid_cell(bottom_x, bottom_y))
+        {
+            double neigh_x = static_cast<double>(bottom_x * resolution_ + origin_.x);
+            double neigh_y = static_cast<double>(bottom_y * resolution_ + origin_.y);
+            neighbors.emplace_back(neigh_x, neigh_y);
+        }
+        if (valid_cell(left_x, left_y))
+        {
+            double neigh_x = static_cast<double>(left_x * resolution_ + origin_.x);
+            double neigh_y = static_cast<double>(left_y * resolution_ + origin_.y);
+            neighbors.emplace_back(neigh_x, neigh_y);
+        }
         
         return neighbors;
     }

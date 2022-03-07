@@ -12,23 +12,17 @@ namespace isc_nav
 class BreadthFirstSearch
 {
 public:
-    explicit BreadthFirstSearch(const nav_msgs::msg::OccupancyGrid& grid) : map_(grid) {}
+    explicit BreadthFirstSearch(const nav_msgs::msg::OccupancyGrid& grid) : start_{}, goal_{}, map_(grid) {}
 
-    void set_start(const geometry_msgs::msg::Pose& start) noexcept
-    {
-        start_ = Point2D(start.position.x, start.position.y);
-        open_list_.emplace(start_);
-    }
-
-    void set_goal(const geometry_msgs::msg::Pose& goal) noexcept
-    {
-        goal_ = Point2D(goal.position.x, goal.position.y);
-    }
-
-    const nav_msgs::msg::Path get_path() noexcept
+    const nav_msgs::msg::Path get_path(const geometry_msgs::msg::Pose& start_pose, const geometry_msgs::msg::Pose& goal_pose) noexcept
     {
         nav_msgs::msg::Path path;
         std::unordered_map<Point2D, Point2D> came_from;
+        std::stack<Point2D> open_list_;
+        start_ = Point2D(start_pose.position.x, start_pose.position.y);
+        goal_ = Point2D(goal_pose.position.x, goal_pose.position.y);
+
+        open_list_.emplace(start_);
         came_from[start_] = start_;
 
         while(!open_list_.empty())
@@ -37,8 +31,10 @@ public:
             const auto& current = open_list_.top();
             open_list_.pop();
 
-            if (current == goal_)
+            // TODO: Param
+            if ((current - goal_).x < 0.1 && (current - goal_).y < 0.1)
             {
+                std::cout << "Goal found, getting path." << std::endl;
                 trace_back_path(current, path, came_from);
             }
 
@@ -46,7 +42,11 @@ public:
             for (auto next : map_.neighbors(current))
             {
                 // Don't add it to the open list if we already visited.
-                if (came_from.find(next) != came_from.end()) continue;
+                if (came_from.find(next) != came_from.end())
+                {
+                    continue;
+                }
+
                 open_list_.emplace(next);
                 came_from[next] = current;
             }
@@ -73,7 +73,5 @@ private:
     Point2D start_;
     Point2D goal_;
     CostMap map_;
-
-    std::stack<Point2D> open_list_;
 };
 }
