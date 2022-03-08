@@ -56,14 +56,3 @@ inline bool operator!=(const Point3D& lhs, const Point3D& rhs)
     return ( lhs.x != rhs.x && lhs.y != rhs.y && lhs.z != rhs.z );
 }
 
-namespace std
-{
-template<> struct hash<Point2D>
-{
-    [[nodiscard]] std::size_t operator()(const Point2D& point) const noexcept
-    {
-        return std::hash<size_t>()(static_cast<size_t>(point.x) ^ (static_cast<size_t>(point.y) << 16));
-    }
-};
-} // namespace std
-

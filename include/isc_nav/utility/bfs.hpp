@@ -17,10 +17,12 @@ public:
     const nav_msgs::msg::Path get_path(const geometry_msgs::msg::Pose& start_pose, const geometry_msgs::msg::Pose& goal_pose) noexcept
     {
         nav_msgs::msg::Path path;
-        std::unordered_map<Point2D, Point2D> came_from;
-        std::stack<Point2D> open_list_;
-        start_ = Point2D(start_pose.position.x, start_pose.position.y);
-        goal_ = Point2D(goal_pose.position.x, goal_pose.position.y);
+        std::unordered_map<CostMap::CostMapIndex, CostMap::CostMapIndex> came_from;
+        std::stack<CostMap::CostMapIndex> open_list_;
+        start_pose_ = start_pose;
+        goal_pose_ = goal_pose;
+        start_ = map_.to_index(Point2D(start_pose.position.x, start_pose.position.y));
+        goal_ = map_.to_index(Point2D(goal_pose.position.x, goal_pose.position.y));
 
         open_list_.emplace(start_);
         came_from[start_] = start_;
@@ -31,8 +33,7 @@ public:
             const auto& current = open_list_.top();
             open_list_.pop();
 
-            // TODO: Param
-            if ((current - goal_).x < 0.1 && (current - goal_).y < 0.1)
+            if (current == goal_)
             {
                 std::cout << "Goal found, getting path." << std::endl;
                 trace_back_path(current, path, came_from);
@@ -55,14 +56,15 @@ public:
         return path;
     }
 
-    void trace_back_path(const Point2D& current, nav_msgs::msg::Path& path, std::unordered_map<Point2D, Point2D>& came_from) noexcept
+    void trace_back_path(const CostMap::CostMapIndex& current, nav_msgs::msg::Path& path, std::unordered_map<CostMap::CostMapIndex, CostMap::CostMapIndex>& came_from) noexcept
     {
         auto parent = came_from[current];
         while (parent != start_)
         {
             geometry_msgs::msg::PoseStamped pose{};
-            pose.pose.position.x = parent.x;
-            pose.pose.position.y = parent.y;
+            Point2D parent_point = map_.to_point(parent);
+            pose.pose.position.x = parent_point.x;
+            pose.pose.position.y = parent_point.y;
             path.poses.emplace_back(pose);
             parent = came_from[parent];
         }
@@ -70,8 +72,12 @@ public:
     }
 
 private:
-    Point2D start_;
-    Point2D goal_;
+    CostMap::CostMapIndex start_;
+    CostMap::CostMapIndex goal_;
+
+    geometry_msgs::msg::Pose start_pose_;
+    geometry_msgs::msg::Pose goal_pose_;
+
     CostMap map_;
 };
 }

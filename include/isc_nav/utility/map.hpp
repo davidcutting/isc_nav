@@ -26,6 +26,8 @@ public:
 class CostMap
 {
 public:
+    using CostMapIndex = std::pair<uint32_t, uint32_t>;
+
     CostMap(const uint32_t& width, const uint32_t& height, const float& resolution, const Point2D& origin)
         : size_x_{width}, size_y_{height}, resolution_{resolution}, origin_{origin}
     {
@@ -57,77 +59,57 @@ public:
         return std::round(static_cast<double>(occ_prob) * transform_ratio);
     }
 
-    uint8_t at(const Point2D& location) const noexcept
+    CostMapIndex to_index(const Point2D& location) const noexcept
     {
-        uint32_t x = static_cast<uint32_t>((location.x - origin_.x) / resolution_);
-        uint32_t y = static_cast<uint32_t>((location.y - origin_.y) / resolution_);
-        return at(x, y);
+        return CostMapIndex(static_cast<uint32_t>((location.x - origin_.x) / resolution_),  // x
+                            static_cast<uint32_t>((location.y - origin_.y) / resolution_)); // y
     }
 
-    uint8_t at(const uint32_t& x, const uint32_t& y) const noexcept
+    Point2D to_point(const CostMapIndex& index) const noexcept
     {
-        return costmap_.at(y * size_x_ + x);
+        return Point2D(static_cast<double>(index.first * resolution_ + origin_.x),   // x
+                       static_cast<double>(index.second * resolution_ + origin_.y)); // y
+    }
+
+    uint8_t at(const Point2D& location) const noexcept
+    {
+        return at(to_index(location));
+    }
+
+    uint8_t at(const CostMapIndex& index) const noexcept
+    {
+        return costmap_.at(index.second * size_x_ + index.first);
     }
 
     bool valid_cell(const int32_t& x, const int32_t& y) const noexcept
     {
-        if (x > size_x_ || y > size_y_ ||
-            x < 0       || y < 0)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        // not bigger than map size or negative
+        return !(x > static_cast<int64_t>(size_x_) || y > static_cast<int64_t>(size_y_) ||
+                 x < 0 || y < 0 ||
+                 at(CostMapIndex(x, y)) != LETHAL_OBSTACLE); // TODO: Make args not x,y
     }
 
-    std::vector<Point2D> neighbors(const Point2D& current)
+    std::vector<CostMapIndex> neighbors(const CostMapIndex& current)
     {
-        std::vector<Point2D> neighbors{};
+        std::vector<CostMapIndex> neighbors{};
 
         // transform floating point x,y into map indices
-        int32_t current_x = static_cast<int32_t>((current.x - origin_.x) / resolution_);
-        int32_t current_y = static_cast<int32_t>((current.y - origin_.y) / resolution_);
+        int32_t top_x = current.first;
+        int32_t top_y = current.second + 1;
 
-        int32_t top_x = current_x;
-        int32_t top_y = current_y + 1;
+        int32_t right_x = current.first + 1;
+        int32_t right_y = current.second;
 
-        int32_t right_x = current_x + 1;
-        int32_t right_y = current_y;
+        int32_t bottom_x = current.first;
+        int32_t bottom_y = current.second - 1;
 
-        int32_t bottom_x = current_x;
-        int32_t bottom_y = current_y - 1;
+        int32_t left_x = current.first - 1;
+        int32_t left_y = current.second;
 
-        int32_t left_x = current_x - 1;
-        int32_t left_y = current_y;
-
-        // add neighbor to list if neighbor is a valid cell
-        if (valid_cell(top_x, top_y))
-        {
-            // transform map indices back to floating point x,y
-            double neigh_x = static_cast<double>(top_x * resolution_ + origin_.x);
-            double neigh_y = static_cast<double>(top_y * resolution_ + origin_.y);
-            neighbors.emplace_back(neigh_x, neigh_y);
-        }
-        if (valid_cell(right_x, right_y))
-        {
-            double neigh_x = static_cast<double>(right_x * resolution_ + origin_.x);
-            double neigh_y = static_cast<double>(right_y * resolution_ + origin_.y);
-            neighbors.emplace_back(neigh_x, neigh_y);
-        }
-        if (valid_cell(bottom_x, bottom_y))
-        {
-            double neigh_x = static_cast<double>(bottom_x * resolution_ + origin_.x);
-            double neigh_y = static_cast<double>(bottom_y * resolution_ + origin_.y);
-            neighbors.emplace_back(neigh_x, neigh_y);
-        }
-        if (valid_cell(left_x, left_y))
-        {
-            double neigh_x = static_cast<double>(left_x * resolution_ + origin_.x);
-            double neigh_y = static_cast<double>(left_y * resolution_ + origin_.y);
-            neighbors.emplace_back(neigh_x, neigh_y);
-        }
+        if (valid_cell(top_x, top_y)) neighbors.emplace_back(top_x, top_y);
+        if (valid_cell(right_x, right_y)) neighbors.emplace_back(right_x, right_y);
+        if (valid_cell(bottom_x, bottom_y)) neighbors.emplace_back(bottom_x, bottom_y);
+        if (valid_cell(left_x, left_y)) neighbors.emplace_back(left_x, left_y);
         
         return neighbors;
     }
@@ -151,3 +133,14 @@ private:
     static constexpr uint8_t FREE_SPACE = 0;
 };
 } // namespace isc_nav
+
+namespace std
+{
+template<> struct hash<isc_nav::CostMap::CostMapIndex>
+{
+    [[nodiscard]] size_t operator()(const isc_nav::CostMap::CostMapIndex& point) const noexcept
+    {
+        return hash<size_t>()(static_cast<size_t>(point.first) ^ (static_cast<size_t>(point.second) << 16));
+    }
+};
+} // namespace std
