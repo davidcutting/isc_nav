@@ -22,6 +22,7 @@
 
 #include "isc_nav/path_planner_node.hpp"
 #include <isc_nav/utility/bfs.hpp>
+#include <isc_nav/utility/rrt.hpp>
 
 namespace isc_nav
 {
@@ -90,12 +91,22 @@ void PathPlanner::update_plan()
 
     RCLCPP_INFO(this->get_logger(), "Updating plan.");
 
+    /*
     auto bfs = BreadthFirstSearch(*last_map_state_);
     nav_msgs::msg::Path bfs_path = bfs.get_path(*last_pos_state_, last_goal_state_->pose);
     
     bfs_path.header.frame_id = map_frame_;
     bfs_path.header.stamp = this->get_clock()->now();
     path_publisher_->publish(bfs_path);
+    */
+
+    auto rrt = RRT(*last_map_state_);
+    nav_msgs::msg::Path rrt_path = rrt.get_path(*last_pos_state_, last_goal_state_->pose);
+    
+    rrt_path.header.frame_id = map_frame_;
+    rrt_path.header.stamp = this->get_clock()->now();
+    path_publisher_->publish(rrt_path);
+
 }
 
 void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)

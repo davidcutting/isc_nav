@@ -132,13 +132,9 @@ public:
         return neighbors;
     }
 
-private:
-    uint32_t size_x_;
-    uint32_t size_y_;
-    float resolution_;
-    Point2D origin_;
-
-    std::vector<uint8_t> costmap_;
+    double get_size_x() { return size_x_; }
+    double get_size_y() { return size_y_; }
+    float get_resolution() { return resolution_; }
 
     // Values cooresponding to definition of Occupancy Grid in ROS
     static constexpr int8_t OCC_GRID_UNKNOWN = -1;
@@ -149,5 +145,13 @@ private:
     static constexpr uint8_t NO_INFORMATION = 255;
     static constexpr uint8_t LETHAL_OBSTACLE = 254;
     static constexpr uint8_t FREE_SPACE = 0;
+    
+private:
+    uint32_t size_x_;
+    uint32_t size_y_;
+    float resolution_;
+    Point2D origin_;
+
+    std::vector<uint8_t> costmap_;
 };
 } // namespace isc_nav
