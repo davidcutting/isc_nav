@@ -62,6 +62,7 @@ def generate_launch_description():
         executable='path_planner_node',
         name='path_planner_node',
         output='screen',
+        prefix=['xterm -e gdb -ex run --args'], 
         parameters=[{
             'use_sim_time': use_sim_time,
             'robot_frame': robot_frame,

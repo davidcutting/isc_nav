@@ -42,6 +42,7 @@ namespace isc_nav
 
                 if (getDistance(Xnearest, random) <= max_dist_)
                 {
+                    // If random vertex is short
                     Xnew = Xnearest;
                 }
                 else

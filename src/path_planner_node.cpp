@@ -34,7 +34,7 @@ PathPlanner::PathPlanner(rclcpp::NodeOptions options)
 {
     this->declare_parameter<std::string>("robot_frame", "base_footprint");
     this->declare_parameter<std::string>("map_frame", "map");
-    this->declare_parameter<float>("tf_timeout", 0.03f);
+    this->declare_parameter<float>("tf_timeout", 0.5f);
     update_params();
     param_update_timer_ = this->create_wall_timer(
       1000ms, std::bind(&PathPlanner::update_params, this)
