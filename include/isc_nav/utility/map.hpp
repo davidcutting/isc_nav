@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <inttypes.h>
-#include <isc_nav/utility/point.hpp>
+#include "../utility/point.hpp"
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include "utility"
 
 namespace isc_nav
 {
@@ -71,7 +73,7 @@ public:
 
     bool valid_cell(const int32_t& x, const int32_t& y) const noexcept
     {
-        if (x > size_x_ || y > size_y_ ||
+        if (x > (int64_t)size_x_ || y > (int64_t)size_y_ ||
             x < 0       || y < 0)
         {
             return false;

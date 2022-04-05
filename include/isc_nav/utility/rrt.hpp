@@ -1,21 +1,27 @@
 #pragma once
 
-#include "isc_nav/utility/point.hpp"
+#include "../utility/point.hpp"
 #include <cmath>
-#include <isc_nav/utility/map.hpp>
+#include "../utility/map.hpp"
 #include <nav_msgs/msg/path.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
 
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <random>
 
 namespace isc_nav
 {
     class RRT 
     {
     public:
-        explicit RRT(const nav_msgs::msg::OccupancyGrid& grid) : start_{}, goal_{}, map_(grid) {}
+        explicit RRT(const nav_msgs::msg::OccupancyGrid& grid) : start_{}, goal_{}, map_(grid) {
+            std::random_device rd;
+            std::mt19937 rng(rd());
+            
+            this->rng = rng;
+        }
 
         const nav_msgs::msg::Path get_path(const geometry_msgs::msg::Pose& start_pose, const geometry_msgs::msg::Pose& goal_pose)
         {
@@ -25,8 +31,6 @@ namespace isc_nav
 
             Point2D random, Xnew, Xnearest;
             double Xnearest_dist = 0;
-
-            int lim = 1000; // number of iterations
 
             // Graph with vertices and edges
             V.push_back(start_);
@@ -106,13 +110,13 @@ namespace isc_nav
 
 
         Point2D randomPosition()
-        {
-            srand(time(0));
-
+        {   
+            std::uniform_real_distribution<double> dist_x(0.0, map_.get_size_x());
+            std::uniform_real_distribution<double> dist_y(0.0, map_.get_size_y());
             while (true) 
             {
-                int32_t x = fRand(0, map_.get_size_x());
-                int32_t y = fRand(0, map_.get_size_y());
+                double x = dist_x(rng);
+                double y = dist_y(rng);
 
                 if (map_.valid_cell(x, y)) 
                 {
@@ -122,8 +126,7 @@ namespace isc_nav
             }
         }
 
-
-        Point2D findNearest(std::vector<Point2D>& V, Point2D random_node, double& Xnearest_dist)
+        Point2D findNearest(const std::vector<Point2D>& V, Point2D random_node, double& Xnearest_dist)
         {
             double dist;
             Point2D Xnearest;
@@ -149,7 +152,7 @@ namespace isc_nav
         }
 
         // p1 is Xnearest, p2 is random node
-        Point2D findNew(Point2D& p1, Point2D& p2, double& Xnearest_dist)
+        Point2D findNew(const Point2D& p1, const Point2D& p2, const double& Xnearest_dist)
         {
             Point2D Xnew;
             double n = max_dist_;
@@ -162,16 +165,16 @@ namespace isc_nav
         }
 
 
-        bool isInObstacle(Point2D& random_node)
+        bool isInObstacle(const Point2D& random_node)
         {
             return map_.at(random_node) == CostMap::LETHAL_OBSTACLE;
         }
 
-        bool isCollisionFree(Point2D& p1, Point2D& p2)
+        bool isCollisionFree(const Point2D& p1, const Point2D& p2)
         {
             float reso = map_.get_resolution();
             double dist = getDistance(p1, p2);
-            int num_of_pt = int(std::ceil(dist / reso));
+            int num_of_pt = static_cast<int>(dist / reso);
             Point2D pt = p1;
 
             for(int i = 0; i < num_of_pt; i++)
@@ -186,7 +189,7 @@ namespace isc_nav
             return true;
         }
 
-        Point2D generateNew(Point2D& p1, Point2D& p2, double& dist, float& reso)
+        Point2D generateNew(const Point2D& p1, const Point2D& p2, double& dist, const float& reso)
         {
             Point2D Xnew;
             double n = reso;
@@ -199,19 +202,13 @@ namespace isc_nav
             return Xnew;
         }
 
-        int32_t fRand(int32_t fMin, int32_t fMax)
-        {
-            int32_t f = (int32_t)rand() / RAND_MAX;
-            return fMin + f * (fMax - fMin);
-        }
-
-        double getDistance(Point2D p1, Point2D p2)
+        double getDistance(const Point2D& p1, const Point2D& p2)
         {
             double dist = std::sqrt(pow((p1.x + p2.x), 2) + pow((p1.y + p2.y), 2));
             return dist;
         }
 
-        int getIndex(std::vector<Point2D> v, Point2D key)
+        int getIndex(const std::vector<Point2D>& v, const Point2D& key)
         {
             auto it = find(v.begin(), v.end(), key);
         
@@ -262,6 +259,12 @@ namespace isc_nav
         std::vector<Point2D> V;
 
         double max_dist_ = 50; // shld be shorter of longer??
+        int lim = 1000; // number of iterations
+
+        // random number generator
+        std::mt19937 rng;
+
+        
     };
 
 } // namespace isc_nav
