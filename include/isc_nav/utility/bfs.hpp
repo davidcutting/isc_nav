@@ -34,7 +34,7 @@ public:
             // TODO: Param
             if ((current - goal_).x < 0.1 && (current - goal_).y < 0.1)
             {
-                std::cout << "Goal found, getting path." << std::endl;
+                //std::cout << "Goal found, getting path." << std::endl;
                 trace_back_path(current, path, came_from);
             }
 

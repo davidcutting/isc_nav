@@ -20,8 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "isc_nav/path_planner_node.hpp"
+#include <isc_nav/path_planner_node.hpp>
 #include <isc_nav/utility/bfs.hpp>
+#include <isc_nav/utility/rrt.hpp>
 
 namespace isc_nav
 {
@@ -33,7 +34,7 @@ PathPlanner::PathPlanner(rclcpp::NodeOptions options)
 {
     this->declare_parameter<std::string>("robot_frame", "base_footprint");
     this->declare_parameter<std::string>("map_frame", "map");
-    this->declare_parameter<float>("tf_timeout", 0.03f);
+    this->declare_parameter<float>("tf_timeout", 0.5f);
     update_params();
     param_update_timer_ = this->create_wall_timer(
       1000ms, std::bind(&PathPlanner::update_params, this)
@@ -90,12 +91,22 @@ void PathPlanner::update_plan()
 
     RCLCPP_INFO(this->get_logger(), "Updating plan.");
 
+    /*
     auto bfs = BreadthFirstSearch(*last_map_state_);
     nav_msgs::msg::Path bfs_path = bfs.get_path(*last_pos_state_, last_goal_state_->pose);
     
     bfs_path.header.frame_id = map_frame_;
     bfs_path.header.stamp = this->get_clock()->now();
     path_publisher_->publish(bfs_path);
+    */
+
+    auto rrt = RRT(*last_map_state_);
+    nav_msgs::msg::Path rrt_path = rrt.get_path(*last_pos_state_, last_goal_state_->pose);
+    
+    rrt_path.header.frame_id = map_frame_;
+    rrt_path.header.stamp = this->get_clock()->now();
+    path_publisher_->publish(rrt_path);
+
 }
 
 void PathPlanner::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)

@@ -26,7 +26,7 @@ namespace isc_nav
 class PurePursuitNode : public rclcpp::Node
 {
 public:
-  PurePursuit::PurePursuit m_tracker;
+  PurePursuit m_tracker;
   explicit PurePursuitNode(rclcpp::NodeOptions options);
 
 private:

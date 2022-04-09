@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <inttypes.h>
-#include <isc_nav/utility/point.hpp>
+#include "../utility/point.hpp"
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include "utility"
 
 namespace isc_nav
 {
@@ -71,7 +73,7 @@ public:
 
     bool valid_cell(const int32_t& x, const int32_t& y) const noexcept
     {
-        if (x > size_x_ || y > size_y_ ||
+        if (x > (int64_t)size_x_ || y > (int64_t)size_y_ ||
             x < 0       || y < 0)
         {
             return false;
@@ -132,13 +134,9 @@ public:
         return neighbors;
     }
 
-private:
-    uint32_t size_x_;
-    uint32_t size_y_;
-    float resolution_;
-    Point2D origin_;
-
-    std::vector<uint8_t> costmap_;
+    double get_size_x() { return size_x_; }
+    double get_size_y() { return size_y_; }
+    float get_resolution() { return resolution_; }
 
     // Values cooresponding to definition of Occupancy Grid in ROS
     static constexpr int8_t OCC_GRID_UNKNOWN = -1;
@@ -149,5 +147,13 @@ private:
     static constexpr uint8_t NO_INFORMATION = 255;
     static constexpr uint8_t LETHAL_OBSTACLE = 254;
     static constexpr uint8_t FREE_SPACE = 0;
+    
+private:
+    uint32_t size_x_;
+    uint32_t size_y_;
+    float resolution_;
+    Point2D origin_;
+
+    std::vector<uint8_t> costmap_;
 };
 } // namespace isc_nav
