@@ -3,6 +3,9 @@
 #include "point.hpp"
 #include <math.h>
 
+namespace isc_nav
+{
+
 constexpr double EPSILON = 1e-3;
 
 // distance formula function that finds distance between two points
@@ -45,4 +48,5 @@ inline bool approximately_equals( const Point2D& expected, const Point2D& actual
 {
 	return ( std::fabs( actual.x - expected.x ) < EPSILON )
 		&& ( std::fabs( actual.y - expected.y ) < EPSILON );
+}
 }

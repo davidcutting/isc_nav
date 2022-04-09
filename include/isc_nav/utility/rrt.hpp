@@ -1,11 +1,14 @@
 #pragma once
 
-#include "../utility/point.hpp"
+#include <isc_nav/utility/point.hpp>
 #include <cmath>
-#include "../utility/map.hpp"
+#include <isc_nav/utility/map.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
 
+#include <string>
 #include <vector>
 #include <cstdlib>
 #include <ctime>
@@ -16,20 +19,31 @@ namespace isc_nav
     class RRT 
     {
     public:
-        explicit RRT(const nav_msgs::msg::OccupancyGrid& grid) : start_{}, goal_{}, map_(grid) {
+        /**
+        * @brief Construct a new RRT object and seed the number generator
+        * @param grid occupancy grid
+        */
+        //RRT();
+        RRT(const nav_msgs::msg::OccupancyGrid& grid) : start_{}, goal_{}, map_(grid) {
             std::random_device rd;
             std::mt19937 rng(rd());
             
             this->rng = rng;
         }
 
+        /**
+         * @brief Get path to start rrt
+         * @param start_pose a 2D point
+         * @param goal_pose a 2D point
+         * @return const nav_msgs::msg::Path 
+         */
         const nav_msgs::msg::Path get_path(const geometry_msgs::msg::Pose& start_pose, const geometry_msgs::msg::Pose& goal_pose)
         {
             nav_msgs::msg::Path path;
             start_ = Point2D(start_pose.position.x, start_pose.position.y);
             goal_ = Point2D(goal_pose.position.x, goal_pose.position.y);
 
-            Point2D random, Xnew, Xnearest;
+            Point2D random{}, Xnew{}, Xnearest{};
             double Xnearest_dist = 0;
 
             // Graph with vertices and edges
@@ -37,65 +51,62 @@ namespace isc_nav
             E.push_back(0);
             G.push_back(E);
 
-            for (int i = 0; i < lim; i++)
+            for (int i = 0; i < lim_; i++)
             {   
                 random = randomPosition();
 
-                // Find nearest vertex to the random node
-                Xnearest = findNearest(V, random, Xnearest_dist);
+                Xnearest = findNearest(random, Xnearest_dist);
 
                 if (getDistance(Xnearest, random) <= max_dist_)
                 {
-                    // If random vertex is short
+                    // If the random node is within the max_dist_ set it as the new node
                     Xnew = Xnearest;
                 }
                 else
-                {
+                {   
                     Xnew = findNew(Xnearest, random, Xnearest_dist);
                 }
 
                 if (isInObstacle(Xnew))
                 {
-                    continue;
+                    continue; // Skip this loop
                 }
                 
-                // Make sure no obstacle between Xnearest and Xnew
                 if (!isCollisionFree(Xnearest, Xnew))
                 {
-                    continue;
+                    continue; // Skip this loop
                 }
 
-                // Get the index of to and from
-                int attach_to = getIndex(V, Xnew);
-                int attach_from = getIndex(V, Xnearest);
+                // Get the index of new random node and the nearest vertex
+                int attach_to = getIndex(Xnew);
+                int attach_from = getIndex(Xnearest);
 
-                // Add edge
+                if (attach_from == -1) {
+                    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Xnearest does not exist");
+                    continue; // Skip this loop
+                }
+
                 if (attach_to == -1)
                 {
                     int add_new = V.size();
                     V.push_back(Xnew);
                     E.push_back(0);
 
-                    for (int i = 0; i < attach_to; i++)
+                    for (int i = 0; i < add_new; i++)
                     {
+                        // Fill in the new column
                         G.at(i).push_back(0);
                     }
 
-                    G.at(attach_from).at(add_new)++;
+                    // Fill in new row
                     G.push_back(E);
+                    // Add edge
+                    G.at(attach_from).at(add_new)++;
                 }
                 else 
                 {
-                    V.push_back(Xnew);
-                    E.push_back(0);
-
-                    for (int i = 0; i < attach_to; i++)
-                    {
-                        G.at(i).push_back(0);
-                    }
-
+                    // Add edge
                     G.at(attach_from).at(attach_to)++;
-                    G.push_back(E);
                 }
 
                 // If vertex at goal return graph
@@ -108,7 +119,10 @@ namespace isc_nav
             return path;
         }
 
-
+        /**
+         * @brief Generate a random position on the map
+         * @return Point2D 
+         */
         Point2D randomPosition()
         {   
             std::uniform_real_distribution<double> dist_x(0.0, map_.get_size_x());
@@ -118,6 +132,7 @@ namespace isc_nav
                 double x = dist_x(rng);
                 double y = dist_y(rng);
 
+                // Check if the generated random node is on the map
                 if (map_.valid_cell(x, y)) 
                 {
                     Point2D random_node(x, y);
@@ -126,10 +141,17 @@ namespace isc_nav
             }
         }
 
-        Point2D findNearest(const std::vector<Point2D>& V, Point2D random_node, double& Xnearest_dist)
+        /**
+         * @brief Get the vertex (already generated) nearest to the random node
+         * @param V a list of generated vertices
+         * @param random_node 
+         * @param Xnearest_dist track the distance between nearest vertex and random node
+         * @return Point2D 
+         */
+        Point2D findNearest(const Point2D& random_node, double& Xnearest_dist)
         {
-            double dist;
-            Point2D Xnearest;
+            double dist{};
+            Point2D Xnearest{};
 
             if (!V.empty()) 
             {
@@ -137,12 +159,17 @@ namespace isc_nav
                 Xnearest_dist = getDistance(V.at(0), random_node);
                 Xnearest = V.at(0);
             }
+            else {
+                RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Empty list");
+                return Xnearest;
+            }
 
             for (auto vertex : V)
             {
                 dist = getDistance(vertex, random_node);
                 if (dist < Xnearest_dist)
-                {
+                {   
+                    // Update distance between nearest vertex and random node
                     Xnearest_dist = dist;
                     Xnearest = vertex;
                 }
@@ -151,10 +178,17 @@ namespace isc_nav
             return Xnearest;
         }
 
-        // p1 is Xnearest, p2 is random node
+        /**
+         * @brief Get a new node that is on the line (connecting the nearest vertex to random node) 
+                    and within the max_dist_ to random node
+         * @param p1 nearest vertex (already in the generated list)
+         * @param p2 random node
+         * @param Xnearest_dist track the distance between nearest vertex and random node
+         * @return Point2D 
+         */
         Point2D findNew(const Point2D& p1, const Point2D& p2, const double& Xnearest_dist)
         {
-            Point2D Xnew;
+            Point2D Xnew{};
             double n = max_dist_;
             double m = Xnearest_dist - n;
 
@@ -164,12 +198,24 @@ namespace isc_nav
             return Xnew;
         }
 
-
+        /**
+         * @brief Check if the new random node is at obstacle on map
+         * @param random_node a random generated nose
+         * @return true 
+         * @return false 
+         */
         bool isInObstacle(const Point2D& random_node)
         {
             return map_.at(random_node) == CostMap::LETHAL_OBSTACLE;
         }
 
+        /**
+         * @brief Check if there is any obstacle between the nearest vertex and random node
+         * @param p1 nearest node
+         * @param p2 random node (aka new node)
+         * @return true 
+         * @return false 
+         */
         bool isCollisionFree(const Point2D& p1, const Point2D& p2)
         {
             float reso = map_.get_resolution();
@@ -179,7 +225,7 @@ namespace isc_nav
 
             for(int i = 0; i < num_of_pt; i++)
             {
-                pt = generateNew(pt, p2, dist, reso);
+                pt = generateAlongLine(pt, p2, dist, reso);
                 if (isInObstacle(pt))
                 {
                     return false;
@@ -189,9 +235,17 @@ namespace isc_nav
             return true;
         }
 
-        Point2D generateNew(const Point2D& p1, const Point2D& p2, double& dist, const float& reso)
+        /**
+         * @brief Generate a node on the line connecting nearest vertex and new random node
+         * @param p1 new generated node along the line
+         * @param p2 new random node
+         * @param dist distance between the new generated along the line and the random node
+         * @param reso resolution of the map
+         * @return Point2D 
+         */
+        Point2D generateAlongLine(const Point2D& p1, const Point2D& p2, double& dist, const float& reso)
         {
-            Point2D Xnew;
+            Point2D Xnew{};
             double n = reso;
             double m = dist - n;
 
@@ -202,21 +256,33 @@ namespace isc_nav
             return Xnew;
         }
 
+        /**
+         * @brief Get the distance between 2 points on map
+         * @param p1 a 2D point
+         * @param p2 a 2D point
+         * @return double 
+         */
         double getDistance(const Point2D& p1, const Point2D& p2)
         {
             double dist = std::sqrt(pow((p1.x + p2.x), 2) + pow((p1.y + p2.y), 2));
             return dist;
         }
 
-        int getIndex(const std::vector<Point2D>& v, const Point2D& key)
+        /**
+         * @brief Get the index of a point in the vector list (which corresponds to graph G)
+         * @param v 
+         * @param key 
+         * @return int 
+         */
+        int getIndex(const Point2D& key)
         {
-            auto it = find(v.begin(), v.end(), key);
+            auto it = find(V.begin(), V.end(), key);
         
             // If element was found
-            if (it != v.end())
+            if (it != V.end())
             {
                 // Calculate the index for key
-                int index = it - v.begin();
+                int index = it - V.begin();
                 return index;
             }
             else {
@@ -225,10 +291,16 @@ namespace isc_nav
             }
         }
 
-        void trace_back_path(Point2D& current, nav_msgs::msg::Path& path) noexcept
+        /**
+         * @brief Generate a path from the graph
+         * @param current the latest generated random node that falls in the goal
+         * @param path
+         */
+        void trace_back_path(const Point2D& end, nav_msgs::msg::Path& path) noexcept
         {
             int size = V.size();
-            int attach_from = getIndex(V, current);
+            Point2D current = end;
+            int curr_index = getIndex(current);
 
             while (current != start_)
             {
@@ -239,13 +311,14 @@ namespace isc_nav
                 
                 for (int i = 0; i < size; i++)
                 {
-                    if (G.at(i).at(attach_from))
+                    if (G.at(i).at(curr_index))
                     {
                         current = V.at(i);
                         break;
                     }
                 }
             }
+
             std::reverse(path.poses.begin(), path.poses.end());
         }
 
@@ -258,13 +331,12 @@ namespace isc_nav
         std::vector<int> E;
         std::vector<Point2D> V;
 
-        double max_dist_ = 50; // shld be shorter of longer??
-        int lim = 1000; // number of iterations
+        // Constants
+        double max_dist_ = 50; // Shld be shorter of longer??
+        int lim_ = 1000; // Number of iterations
 
-        // random number generator
+        // Random number generator
         std::mt19937 rng;
-
-        
     };
 
 } // namespace isc_nav

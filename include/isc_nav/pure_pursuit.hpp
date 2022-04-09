@@ -27,12 +27,14 @@
 #include <vector>
 #include "utility/point.hpp"
 
+
+
+namespace isc_nav
+{
 typedef std::vector<Point3D> Path;
 typedef std::pair<Point3D, Point3D> Segment3D;
 typedef std::pair<Point2D, Point2D> Segment2D;
 
-namespace PurePursuit
-{
 class PurePursuit 
 {
 public:

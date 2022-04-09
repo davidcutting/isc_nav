@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../path_planner_node.hpp"
+#include <isc_nav/path_planner_node.hpp>
 #include <isc_nav/utility/bfs.hpp>
 #include <isc_nav/utility/rrt.hpp>
 

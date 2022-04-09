@@ -29,7 +29,7 @@
 #include <limits>
 #include <stdexcept>
 
-namespace PurePursuit
+namespace isc_nav
 {
 
 PurePursuit::PurePursuit(const Path& robot_path, const double& lookahead_distance): m_robot_path(robot_path)
